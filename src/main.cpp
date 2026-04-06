@@ -2,7 +2,6 @@
 #include "aopc-cli/core/commandHandler.hpp"
 
 
-std::string userInput;
 CommandHandler handler;
 
 int main(int, char**){

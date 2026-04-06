@@ -3,7 +3,7 @@ project(aopc-cli VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra -Wconversion -Wsign-conversion -pedantic")
 
 set(source_dir "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(include_dir "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -11,18 +11,11 @@ set(include_dir "${CMAKE_CURRENT_SOURCE_DIR}/include")
 include(FetchContent)
 
 FetchContent_Declare(
-    nats_c
-    GIT_REPOSITORY https://github.com/nats-io/nats.c.git
-    GIT_TAG        v3.12.0
-)
-
-FetchContent_Declare(
     json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG        v3.12.0
 )
 
-FetchContent_MakeAvailable(nats_c)
 FetchContent_MakeAvailable(json)
 
 add_executable(aopc-cli)
