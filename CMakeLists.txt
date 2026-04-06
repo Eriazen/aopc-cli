@@ -20,13 +20,25 @@ FetchContent_Declare(
     GIT_TAG        v3.12.0
 )
 
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.12.0
+)
+
 FetchContent_MakeAvailable(nats_c)
+FetchContent_MakeAvailable(json)
 
 add_executable(aopc-cli)
 
 target_sources(aopc-cli PRIVATE
     ${source_dir}/main.cpp
-    ${source_dir}/io/cmdParser.cpp
+    ${source_dir}/core/commandHandler.cpp
+    ${source_dir}/core/command.cpp
+    ${source_dir}/commands/helpCommand.cpp
+    ${source_dir}/commands/exitCommand.cpp
+    ${source_dir}/commands/invalidCommand.cpp
+    ${source_dir}/commands/priceCommand.cpp
     ${source_dir}/io/natsManager.cpp
 )
 
@@ -34,7 +46,7 @@ target_include_directories(aopc-cli PRIVATE
     ${include_dir}
 )
 
-target_link_libraries(aopc-cli PRIVATE nats_static)
+target_link_libraries(aopc-cli PRIVATE nats_static nlohmann_json::nlohmann_json)
 
 if(WIN32)
     target_link_libraries(aopc-cli PRIVATE ws2_32)
