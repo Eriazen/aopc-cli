@@ -10,10 +10,6 @@ set(include_dir "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include(FetchContent)
 
-set(NATS_BUILD_EXAMPLES OFF CACHE BOOL "Disable NATS examples" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "Disable tests for NATS" FORCE)
-set(NATS_BUILD_LIB_SHARED OFF CACHE BOOL "Build NATS as a static library" FORCE)
-
 FetchContent_Declare(
     nats_c
     GIT_REPOSITORY https://github.com/nats-io/nats.c.git
@@ -39,15 +35,10 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/commands/exitCommand.cpp
     ${source_dir}/commands/invalidCommand.cpp
     ${source_dir}/commands/priceCommand.cpp
-    ${source_dir}/io/natsManager.cpp
 )
 
 target_include_directories(aopc-cli PRIVATE
     ${include_dir}
 )
 
-target_link_libraries(aopc-cli PRIVATE nats_static nlohmann_json::nlohmann_json)
-
-if(WIN32)
-    target_link_libraries(aopc-cli PRIVATE ws2_32)
-endif()
+target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json)
