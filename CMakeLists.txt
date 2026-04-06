@@ -3,10 +3,16 @@ project(aopc-cli VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+
+set(source_dir "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(include_dir "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include(FetchContent)
 
 set(NATS_BUILD_EXAMPLES OFF CACHE BOOL "Disable NATS examples" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Disable tests for NATS" FORCE)
+set(NATS_BUILD_LIB_SHARED OFF CACHE BOOL "Build NATS as a static library" FORCE)
 
 FetchContent_Declare(
     nats_c
@@ -19,12 +25,17 @@ FetchContent_MakeAvailable(nats_c)
 add_executable(aopc-cli)
 
 target_sources(aopc-cli PRIVATE
-    src/main.cpp
-    src/io/cmdParser.cpp
+    ${source_dir}/main.cpp
+    ${source_dir}/io/cmdParser.cpp
+    ${source_dir}/io/natsManager.cpp
 )
 
 target_include_directories(aopc-cli PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${include_dir}
 )
 
-target_link_libraries(aopc-cli PRIVATE nats)
+target_link_libraries(aopc-cli PRIVATE nats_static)
+
+if(WIN32)
+    target_link_libraries(aopc-cli PRIVATE ws2_32)
+endif()
