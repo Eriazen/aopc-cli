@@ -1,6 +1,5 @@
 #include <iostream>
 #include "aopc-cli/core/commandHandler.hpp"
-#include "aopc-cli/io/natsManager.hpp"
 
 
 std::string userInput;
