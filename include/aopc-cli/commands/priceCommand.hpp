@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aopc-cli/core/command.hpp"
+#include "aopc-cli/io/argParser.hpp"
 
 
 class PriceCommand : public Command {
@@ -8,6 +9,7 @@ class PriceCommand : public Command {
         void execute(const std::vector<std::string>& args) override;
 
     private:
-        std::string itemName;
-        std::vector<std::string> cities;
+        std::string getItemName(const std::vector<std::string>& args);
+        bool getCities(ArgParser& parser, std::vector<std::string>& cities);
+        bool getQualities(ArgParser& parser, std::vector<std::string>& qualities);
 };
