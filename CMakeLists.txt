@@ -18,6 +18,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(json)
 
+find_package(SQLite3 REQUIRED)
+
 add_executable(aopc-cli)
 
 target_sources(aopc-cli PRIVATE
@@ -28,10 +30,11 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/commands/invalidCommand.cpp
     ${source_dir}/commands/priceCommand.cpp
     ${source_dir}/io/argParser.cpp
+    ${source_dir}/db/itemDatabase.cpp
 )
 
 target_include_directories(aopc-cli PRIVATE
     ${include_dir}
 )
 
-target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3)
