@@ -61,6 +61,33 @@ def insert_display_names(conn: sqlite3.Connection, display_names: dict) -> None:
             except sqlite3.IntegrityError:
                 pass
     
+    # Handle enchanted items with @ notation
+    cursor.execute('SELECT DISTINCT internal_id FROM Items WHERE internal_id LIKE "%@%"')
+    enchanted_items = cursor.fetchall()
+    
+    for row in enchanted_items:
+        enchanted_id = row[0]
+        # Parse the base item name and enchantment level
+        if '@' in enchanted_id:
+            base_name, enchantment_level = enchanted_id.rsplit('@', 1)
+            
+            # Look up the base item's display name
+            if base_name in display_names:
+                base_display_name = display_names[base_name]
+                # Append enchantment level with dot notation
+                enchanted_display_name = f"{base_display_name}.{enchantment_level}"
+                
+                try:
+                    cursor.execute('''
+                        UPDATE Items
+                        SET display_name = ?
+                        WHERE internal_id = ?
+                    ''', (enchanted_display_name, enchanted_id))
+                    if cursor.rowcount > 0:
+                        updated_count += 1
+                except sqlite3.IntegrityError:
+                    pass
+    
     conn.commit()
     return updated_count
 
