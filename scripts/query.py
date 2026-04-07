@@ -38,5 +38,17 @@ def query_item_info(item_id):
         }
     return None
 
-print(query_crafting_requirements('T4_BAG'))
-print(query_item_info('T4_BAG'))
+def items_without_display_names():
+    cursor.execute('''
+        SELECT internal_id
+        FROM Items
+        WHERE display_name IS NULL
+    ''')
+    
+    results = cursor.fetchall()
+    return [row[0] for row in results]
+
+if __name__ == "__main__":
+    print(query_crafting_requirements('T4_BAG@4'))
+    print(query_item_info('T4_BAG@4'))
+    print(query_item_info('T7_WOOD_LEVEL3'))

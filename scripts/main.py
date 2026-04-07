@@ -56,15 +56,43 @@ def parse_items_json(json_file: pathlib.Path) -> dict:
             if item is None or not isinstance(item, dict):
                 continue
             
+            unique_name = item.get('@uniquename')
+            if not unique_name:
+                continue
+            
             # Check if item has crafting requirements
-            if 'craftingrequirements' in item and '@uniquename' in item:
-                unique_name = item['@uniquename']
+            if 'craftingrequirements' in item:
                 crafting_reqs = item['craftingrequirements']
                 
                 items_with_recipes[unique_name] = {
                     'craftingrequirements': crafting_reqs,
                     'item_type': item_type
                 }
+            
+            # Parse enchantments
+            if 'enchantments' in item:
+                enchantments = item['enchantments']
+                if isinstance(enchantments, dict) and 'enchantment' in enchantments:
+                    enchantment_list = enchantments['enchantment']
+                    if not isinstance(enchantment_list, list):
+                        enchantment_list = [enchantment_list]
+                    
+                    for enchantment in enchantment_list:
+                        if enchantment is None or not isinstance(enchantment, dict):
+                            continue
+                        
+                        enchantment_level = enchantment.get('@enchantmentlevel')
+                        if 'craftingrequirements' in enchantment:
+                            # Create enchanted item key
+                            enchanted_unique_name = f"{unique_name}@{enchantment_level}"
+                            crafting_reqs = enchantment['craftingrequirements']
+                            
+                            items_with_recipes[enchanted_unique_name] = {
+                                'craftingrequirements': crafting_reqs,
+                                'item_type': item_type,
+                                'base_item': unique_name,
+                                'enchantment_level': enchantment_level
+                            }
     
     return items_with_recipes
 
@@ -76,8 +104,13 @@ def insert_items_and_recipes(conn: sqlite3.Connection, items_data: dict) -> None
     for unique_name, item_info in items_data.items():
         crafting_reqs = item_info['craftingrequirements']
         
-        # Handle case where craftingrequirements is a list
+        # Handle case where craftingrequirements is a list - use the first entry
         if isinstance(crafting_reqs, list):
+            if len(crafting_reqs) == 0:
+                continue
+            crafting_reqs = crafting_reqs[0]
+        
+        if not isinstance(crafting_reqs, dict):
             continue
         
         # Extract crafting requirements
