@@ -5,9 +5,8 @@
 void ExitCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
     // Check if the number of arguments is correct
-    if (!parser.checkArgs(0)) {
-        return;
-    }
+    if (!parser.checkArgs(0)) return;
+    
     std::cout << "Exiting..." << std::endl;
     exit(0);
 }

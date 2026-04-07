@@ -10,15 +10,11 @@ ItemDatabase::ItemDatabase(const std::string& dbPath) {
 }
 
 ItemDatabase::~ItemDatabase() {
-    if (db) {
-        sqlite3_close(db);
-    }
+    if (db) sqlite3_close(db);
 }
 
 std::string ItemDatabase::getItemIdByDisplayName(const std::string& displayName) {
-    if (!db) {
-        return "";
-    }
+    if (!db) return "";
 
     sqlite3_stmt* stmt;
     std::string internalId;
@@ -41,9 +37,7 @@ std::string ItemDatabase::getItemIdByDisplayName(const std::string& displayName)
 std::vector<RecipeIngredient> ItemDatabase::getRecipeIngredients(const std::string& craftedItemId) {
     std::vector<RecipeIngredient> ingredients;
 
-    if (!db) {
-        return ingredients;
-    }
+    if (!db) return ingredients;
     
     sqlite3_stmt* stmt;
 

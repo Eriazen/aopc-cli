@@ -27,9 +27,7 @@ void CommandHandler::run() {
         std::getline(std::cin, userInput);
 
         // Skip empty input
-        if (userInput.empty()) {
-            continue;
-        }
+        if (userInput.empty()) continue;
 
         // Parse user input into command and arguments
         std::istringstream userInputStream(userInput);
