@@ -23,11 +23,11 @@ add_executable(aopc-cli)
 target_sources(aopc-cli PRIVATE
     ${source_dir}/main.cpp
     ${source_dir}/core/commandHandler.cpp
-    ${source_dir}/core/command.cpp
     ${source_dir}/commands/helpCommand.cpp
     ${source_dir}/commands/exitCommand.cpp
     ${source_dir}/commands/invalidCommand.cpp
     ${source_dir}/commands/priceCommand.cpp
+    ${source_dir}/io/argParser.cpp
 )
 
 target_include_directories(aopc-cli PRIVATE

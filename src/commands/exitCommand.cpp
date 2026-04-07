@@ -1,8 +1,11 @@
 #include "aopc-cli/commands/exitCommand.hpp"
+#include "aopc-cli/io/argParser.hpp"
 #include <iostream>
 
 void ExitCommand::execute(const std::vector<std::string>& args) {
-    if (!checkArgs(args, 0)) {
+    ArgParser parser(args);
+    // Check if the number of arguments is correct
+    if (!parser.checkArgs(0)) {
         return;
     }
     std::cout << "Exiting..." << std::endl;
