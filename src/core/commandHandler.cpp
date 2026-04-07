@@ -45,8 +45,7 @@ void CommandHandler::run() {
         auto it = commands.find(commandName);
         if (it != commands.end()) {
             it->second->execute(args);
-        }
-        else {
+        } else {
             commands["invalid"]->execute({});
         }
     }

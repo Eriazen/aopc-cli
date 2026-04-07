@@ -20,7 +20,7 @@ std::vector<std::string> ArgParser::getCommandFlagValues(const std::string& flag
     if (it != args.end()) {
         ++it; // Move to the next element (the value)
         // Collect values until the next flag or the end of the arguments
-        while (it != args.end() && *it != "-" && *it != "--") {
+        while (it != args.end() && !it->empty() && it->front() != '-') {
             values.push_back(*it);
             ++it;
         }
@@ -30,8 +30,8 @@ std::vector<std::string> ArgParser::getCommandFlagValues(const std::string& flag
 
 // Check if the number of arguments matches the expected count
 bool ArgParser::checkArgs(size_t expectedCount) {
-    if (args.size() != expectedCount) {
-        std::cout << "Error: Expected " << expectedCount << " arguments, but got " << args.size() << "." << std::endl;
+    if (args.size() < expectedCount) {
+        std::cout << "Error: Expected atleast " << expectedCount << " arguments, but got " << args.size() << "." << std::endl;
         return false;
     }
     return true;
