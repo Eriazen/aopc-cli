@@ -2,7 +2,7 @@
 
 #include <map>
 #include <memory>
-#include "aopc-cli/core/command.h"
+#include "aopc-cli/core/command.hpp"
 
 
 // Command handler class

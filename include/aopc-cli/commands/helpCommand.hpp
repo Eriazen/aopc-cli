@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aopc-cli/core/command.h"
+#include "aopc-cli/core/command.hpp"
 
 
 class HelpCommand : public Command {
