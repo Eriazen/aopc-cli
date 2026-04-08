@@ -1,9 +1,10 @@
 #include "aopc-cli/commands/priceCommand.hpp"
 #include "aopc-cli/core/constants.hpp"
-#include "aopc-cli/db/itemDatabase.hpp"
 #include "aopc-cli/core/settings.hpp"
+#include "aopc-cli/io/apiManager.hpp"
 #include <iostream>
 #include <algorithm>
+#include <unordered_set>
 
 
 // Extract the item name from the command arguments, stopping at the first flag
@@ -68,6 +69,60 @@ bool PriceCommand::getQualities(ArgParser& parser, std::vector<std::string>& qua
     return true;
 }
 
+// Build an API request url from provided information
+std::string PriceCommand::apiURLBuilder(const std::string& itemId, const std::vector<RecipeIngredient>& ingredients, const std::vector<std::string>& cities, const std::vector<std::string>& qualities) {
+    std::string url;
+
+    url.append(Settings::getInstance().getRegionURL());
+    url.append(std::string(constants::API_PRICE_ENDPOINT));
+    url.append(itemId);
+
+    for (const RecipeIngredient& ingredient : ingredients) {
+        url.append("," + ingredient.materialItemId);
+    }
+
+    url.append("?locations=");
+
+    for (const std::string& city : cities) {
+        if (city != cities.front()) {
+            url.append(",");
+        }
+        url.append(city);
+    }
+
+    url.append("&qualities=");
+    
+    for (const std::string& quality : qualities) {
+        if (quality != qualities.front()) {
+            url.append(",");
+        }
+        url.append(quality);
+    }
+
+    return url;
+}
+
+// Response JSON may need clean up from materials with quality higher than 1
+void PriceCommand::jsonResponseCleanup(json& responseJson, const std::vector<RecipeIngredient>& ingredients) {
+    std::unordered_set<std::string> ingredientIds;
+    // Get ingredient IDs to compare against json item IDs later
+    for (const auto& ing : ingredients) {
+        ingredientIds.insert(ing.materialItemId);
+    }
+
+    for (auto it = responseJson.begin(); it != responseJson.end();) {
+        std::string currentItemId = (*it)["item_id"];
+        int quality = (*it)["quality"];
+
+        // Erase all materials with quality higher than 1
+        if (ingredientIds.count(currentItemId) && quality != 1) {
+            it = responseJson.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 // Execute the price command, fetching item information and validating cities and qualities
 void PriceCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
@@ -103,6 +158,18 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     // Invoke the helper function to get the list of qualities from the command arguments, validating against known qualities
     if (!getQualities(parser, qualities)) return;
 
+    // Build API url from known data, appending ingredients, cities and qualities
+    std::string url = apiURLBuilder(itemId, ingredients, cities, qualities);
+
+    // Initialize APIManager, make a request and parse recieved JSON response
+    APIManager api(url);
+    api.performCurlRequest();
+    api.parseJsonResponse();
+    json prices = api.getJsonResponse();
+    jsonResponseCleanup(prices, ingredients);
+
+
+
     // For demonstration purposes, print the extracted information to the console
     std::cout << "Price command executed: " << itemName << " (ID: " << itemId << ")";
     std::cout << "\nCities: ";
@@ -117,4 +184,6 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     for (const auto& ingredient : ingredients) {
         std::cout << " - Ingredient: " << ingredient.materialItemId << ", Quantity: " << ingredient.quantity << std::endl;
     }
+
+    std::cout << prices << std::endl;
 }
