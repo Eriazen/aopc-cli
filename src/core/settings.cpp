@@ -52,7 +52,7 @@ bool Settings::loadSettingsFromFile(const std::filesystem::path& filePath) {
     try {
         // Create a JSON object to load file data into
         json j;
-        file >> j;
+        j = json::parse(file);
 
         std::string dbStr = j["database_path"];
         databasePath = std::filesystem::path(dbStr);

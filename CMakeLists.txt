@@ -19,7 +19,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(json)
 
 find_package(SQLite3 REQUIRED)
-#find_package(CURL REQUIRED HTTPS)
+find_package(CURL REQUIRED HTTPS)
 
 add_executable(aopc-cli)
 
@@ -32,6 +32,7 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/commands/invalidCommand.cpp
     ${source_dir}/commands/priceCommand.cpp
     ${source_dir}/io/argParser.cpp
+    ${source_dir}/io/apiManager.cpp
     ${source_dir}/db/itemDatabase.cpp
 )
 
@@ -51,4 +52,4 @@ add_custom_command(TARGET aopc-cli POST_BUILD
     COMMENT "Copying config folder to build directory"
 )
 
-target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3)
+target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3 CURL::libcurl)
