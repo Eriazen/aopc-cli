@@ -7,10 +7,6 @@
 #include "aopc-cli/commands/priceCommand.hpp"
 
 
-CommandHandler::CommandHandler() {
-    initializeCommands();
-}
-
 // Initialize the command map with available commands, associating command names with their respective command objects
 void CommandHandler::initializeCommands() {
     commands["help"] = std::make_unique<HelpCommand>();

@@ -3,11 +3,6 @@
 #include <iostream>
 
 
-// Constructor: Initialize the argument parser with the provided arguments
-ArgParser::ArgParser(const std::vector<std::string>& arguments) {
-    args = arguments;
-}
-
 // Check if a specific flag exists in the arguments
 bool ArgParser::commandFlagExists(const std::string& flag) {
     return std::find(args.begin(), args.end(), flag) != args.end();

@@ -8,7 +8,7 @@
 // Command handler class
 class CommandHandler {
     public:
-        CommandHandler();
+        CommandHandler() { initializeCommands(); };
         void run();
 
     private:
