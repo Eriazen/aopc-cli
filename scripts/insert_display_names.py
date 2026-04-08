@@ -55,7 +55,7 @@ def insert_display_names(conn: sqlite3.Connection, display_names: dict) -> None:
                     UPDATE Items
                     SET display_name = ?
                     WHERE internal_id = ?
-                ''', (display_name, f"{unique_name}_LEVEL{level}"))
+                ''', (display_name, f"{unique_name}_LEVEL{level}@{level}"))
                 if cursor.rowcount > 0:
                     updated_count += 1
             except sqlite3.IntegrityError:

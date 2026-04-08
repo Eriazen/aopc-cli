@@ -49,6 +49,7 @@ def items_without_display_names():
     return [row[0] for row in results]
 
 if __name__ == "__main__":
-    print(query_crafting_requirements('T4_BAG@4'))
-    print(query_item_info('T4_BAG@4'))
+    print(query_crafting_requirements('T5_BAG@3'))
+    print(query_item_info('T5_BAG@4'))
     print(query_item_info('T7_WOOD_LEVEL3'))
+    print(items_without_display_names())

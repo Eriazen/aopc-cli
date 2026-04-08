@@ -103,6 +103,9 @@ def insert_items_and_recipes(conn: sqlite3.Connection, items_data: dict) -> None
     
     for unique_name, item_info in items_data.items():
         crafting_reqs = item_info['craftingrequirements']
+        if "LEVEL" in unique_name:
+            level = unique_name.split("LEVEL")[1]
+            unique_name += f"@{level}"
         
         # Handle case where craftingrequirements is a list - use the first entry
         if isinstance(crafting_reqs, list):
@@ -136,6 +139,9 @@ def insert_items_and_recipes(conn: sqlite3.Connection, items_data: dict) -> None
                 continue
             
             material_unique_name = resource.get('@uniquename')
+            if "LEVEL" in material_unique_name:
+                level = material_unique_name.split("LEVEL")[1]
+                material_unique_name += f"@{level}"
             quantity = int(resource.get('@count', 0))
             
             if material_unique_name and quantity > 0:
