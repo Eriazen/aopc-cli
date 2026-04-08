@@ -19,12 +19,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(json)
 
 find_package(SQLite3 REQUIRED)
+#find_package(CURL REQUIRED HTTPS)
 
 add_executable(aopc-cli)
 
 target_sources(aopc-cli PRIVATE
     ${source_dir}/main.cpp
     ${source_dir}/core/commandHandler.cpp
+    ${source_dir}/core/settings.cpp
     ${source_dir}/commands/helpCommand.cpp
     ${source_dir}/commands/exitCommand.cpp
     ${source_dir}/commands/invalidCommand.cpp
@@ -35,6 +37,18 @@ target_sources(aopc-cli PRIVATE
 
 target_include_directories(aopc-cli PRIVATE
     ${include_dir}
+)
+
+add_custom_command(TARGET aopc-cli POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/database $<TARGET_FILE_DIR:aopc-cli>/database
+    COMMENT "Copying database folder to build directory"
+)
+
+add_custom_command(TARGET aopc-cli POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/config $<TARGET_FILE_DIR:aopc-cli>/config
+    COMMENT "Copying config folder to build directory"
 )
 
 target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3)

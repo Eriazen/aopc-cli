@@ -1,6 +1,7 @@
 #include "aopc-cli/commands/priceCommand.hpp"
 #include "aopc-cli/core/constants.hpp"
 #include "aopc-cli/db/itemDatabase.hpp"
+#include "aopc-cli/core/settings.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -84,7 +85,7 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     }
 
     // Fetch the item ID from the database using the provided item name
-    ItemDatabase itemDb(std::string(constants::DB_PATH));
+    ItemDatabase itemDb(std::string(Settings::getInstance().getDatabasePath().string()));
     std::string itemId = itemDb.getItemIdByDisplayName(itemName);
     // If the item ID is empty, it means the item was not found in the database, so print an error message and return
     if (itemId.empty()) {

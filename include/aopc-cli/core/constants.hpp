@@ -18,9 +18,6 @@ namespace constants {
     // Albion Online values
     inline constexpr std::array<std::string_view, 7> CITIES { "Caerleon", "Lymhurst", "Bridgewater", "Martlock", "Thetford", "Fort Sterling", "Brecilien" };
     inline constexpr std::array<std::string_view, 5> ITEM_QUALITIES { "Normal", "Good", "Outstanding", "Excellent", "Masterpiece" };
-
-    // Temporary hardcoded path to the SQLite database file
-    inline constexpr std::string_view DB_PATH { "C:\\Users\\vitve\\Documents\\Projects\\aopc-cli\\database\\aopc_items.db" };
 }
 
 #endif // CONSTANTS_HPP
