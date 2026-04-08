@@ -2,6 +2,8 @@
 #include <iostream>
 
 
+// Constructor: Opens the SQLite database at the specified path
+// If the database cannot be opened, it logs an error message and sets the db pointer to nullptr
 ItemDatabase::ItemDatabase(const std::string& dbPath) {
     if (sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
         std::cerr << "Error opening database: " << sqlite3_errmsg(db) << std::endl;
@@ -9,12 +11,15 @@ ItemDatabase::ItemDatabase(const std::string& dbPath) {
     }
 }
 
+// Destructor: Closes the SQLite database connection if it was successfully opened
 ItemDatabase::~ItemDatabase() {
     if (db) sqlite3_close(db);
 }
 
+// Retrieves the internal item ID from the database based on the provided display name (case-insensitive)
+// If the item is not found or if the database connection is not available, it returns an empty string
 std::string ItemDatabase::getItemIdByDisplayName(const std::string& displayName) {
-    if (!db) return "";
+    if (!db) return ""; // Return empty string if database connection is not available
 
     sqlite3_stmt* stmt;
     std::string internalId;
@@ -24,20 +29,22 @@ std::string ItemDatabase::getItemIdByDisplayName(const std::string& displayName)
     if (sqlite3_prepare_v2(db, query, -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_text(stmt, 1, displayName.c_str(), -1, SQLITE_TRANSIENT); // Bind the display name parameter
 
-        // Execute the query and check if a row is returned
+        // Execute the query and retrieve the internal ID if a matching item is found
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             internalId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         }
     }
-    sqlite3_finalize(stmt);
+    sqlite3_finalize(stmt); // Finalize the prepared statement to free resources
 
     return internalId;
 }
 
+// Retrieves the list of recipe ingredients for a given crafted item ID from the database
+// If the database connection is not available, it returns an empty vector
 std::vector<RecipeIngredient> ItemDatabase::getRecipeIngredients(const std::string& craftedItemId) {
     std::vector<RecipeIngredient> ingredients;
 
-    if (!db) return ingredients;
+    if (!db) return ingredients; // Return empty vector if database connection is not available
     
     sqlite3_stmt* stmt;
 

@@ -5,10 +5,10 @@
 
 void HelpCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
-    // Check if the number of arguments is correct
-    if (!parser.checkArgs(0)) return;
+    // Check if the number of arguments is correct, and print an error message if not
+    if (!parser.checkExactArgs(0)) return;
     
-    // Print the help message with available commands
+    // Print the help message with a list of available commands and their descriptions
     std::cout << "Available commands:\n" << std::endl;\
     std::cout << "      help - Show this help message." << std::endl;
     std::cout << "      exit - Exit the application." << std::endl;

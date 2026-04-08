@@ -15,7 +15,8 @@ class ArgParser {
         // Get the values associated with a specific flag
         std::vector<std::string> getCommandFlagValues(const std::string& flag);
 
-        bool checkArgs(size_t expectedCount);
+        bool checkExactArgs(size_t expectedCount);
+        bool checkMinArgs(size_t minCount);
 
     private:
         std::vector<std::string> args;
