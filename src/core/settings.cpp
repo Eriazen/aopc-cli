@@ -12,36 +12,56 @@ Settings& Settings::getInstance() {
     return instance;
 }
 
-std::filesystem::path Settings::getDatabasePath() const {
-    return databasePath;
-}
-
-std::string Settings::getRegionURL() const {
-    return regionURL;
-}
-
 // Set the database path, ensuring it exists and has the correct extension
 bool Settings::setDatabasePath(const std::filesystem::path& path) {
     if (std::filesystem::exists(path) && path.extension() == ".db") {
-        databasePath = path.string();
+        m_databasePath = path.string();
         return true;
-    } else {
-        return false;
     }
+    
+    return false;
 }
 
 // Set the region URL based on a keyword, validating against known regions
 bool Settings::setRegionURL(const std::string& keyword) {
     if (keyword == "europe") {
-        regionURL = std::string(constants::API_EUROPE_URL);
+        m_regionURL = std::string(constants::API_EUROPE_URL);
     } else if (keyword == "americas") {
-        regionURL = std::string(constants::API_AMERICAS_URL);
+        m_regionURL = std::string(constants::API_AMERICAS_URL);
     } else if (keyword == "asia") {
-        regionURL = std::string(constants::API_ASIA_URL);
+        m_regionURL = std::string(constants::API_ASIA_URL);
     } else {
         return false;
     }
+
     return true;
+}
+
+bool Settings::setMarketTax(const float& taxFraction) {
+    if (typeid(taxFraction) == typeid(float)) {
+        m_marketTax = taxFraction;
+        return true;
+    }
+
+    return false;
+}
+
+bool Settings::setResourceReturnRate(const float& rrrFraction) {
+    if (typeid(rrrFraction) == typeid(float)) {
+        m_resourceReturnRate = rrrFraction;
+        return true;
+    }
+
+    return false;
+}
+
+bool Settings::setStationFee(const int& stationFee) {
+    if (typeid(m_stationFee) == typeid(int)) {
+        m_stationFee = stationFee;
+        return true;
+    }
+
+    return false;
 }
 
 bool Settings::loadSettingsFromFile(const std::filesystem::path& filePath) {
@@ -55,13 +75,20 @@ bool Settings::loadSettingsFromFile(const std::filesystem::path& filePath) {
         j = json::parse(file);
 
         std::string dbStr = j["database_path"];
-        databasePath = std::filesystem::path(dbStr);
-        regionURL = j["region_url"];
+        m_databasePath = std::filesystem::path(dbStr);
+        m_regionURL = j["region_url"];
+        std::string taxStr = j["market_tax"];
+        m_marketTax = std::stof(taxStr);
+        std::string rrrStr = j["resource_return_rate"];
+        m_resourceReturnRate = std::stof(rrrStr);
+        std::string feeStr = j["station_fee"];
+        m_stationFee = std::stoi(feeStr);
 
         return true;
-    } catch (json::parse_error& e) {
+    } catch (const std::exception& e) {
         // Catch parsing errors (corrupted JSON file, etc.)
         std::cerr << "Error: Couldn't parse file '"<< filePath <<"' with exception '" << e.what() << "'." << std::endl;
+        std::cerr << "Writing default value to a settings file.\n" << std::endl;
         return false;
     }
 }
@@ -69,8 +96,11 @@ bool Settings::loadSettingsFromFile(const std::filesystem::path& filePath) {
 bool Settings::saveSettingsToFile(const std::filesystem::path& filePath) const {
     // Create a JSON object to store currect settings in
     json j;
-    j["database_path"] = databasePath.string();
-    j["region_url"] = regionURL;
+    j["database_path"] = m_databasePath.string();
+    j["region_url"] = m_regionURL;
+    j["market_tax"] = std::to_string(m_marketTax);
+    j["resource_return_rate"] = std::to_string(m_resourceReturnRate);
+    j["station_fee"] = std::to_string(m_stationFee);
 
     // Open settings file, overwriting existing settings
     std::ofstream file(filePath, std::ios::trunc);
