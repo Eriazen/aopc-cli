@@ -24,11 +24,12 @@ std::string PriceCommand::getItemName(const std::vector<std::string>& args) {
 }
 
 // Get the list of cities from the command arguments, validating against known cities
-bool PriceCommand::getCities(ArgParser& parser, std::vector<std::string>& cities) {
+bool PriceCommand::getCities(ArgParser& parser) {
     if (parser.commandFlagExists("--cities")) {
-        cities = parser.getCommandFlagValues("--cities");
+        std::vector<std::string> requestedCities = parser.getCommandFlagValues("--cities");
+
         // Validate the specified cities, ensuring they are in the list of known cities
-        for (const auto& city : cities) {
+        for (const auto& city : requestedCities) {
             if (std::find(constants::CITIES.begin(), constants::CITIES.end(), city) == constants::CITIES.end()) {
                 // If an invalid city is found, print an error message and return false
                 std::cout << "Error: Invalid city '" << city << "'. Valid cities are: ";
@@ -36,22 +37,32 @@ bool PriceCommand::getCities(ArgParser& parser, std::vector<std::string>& cities
                 std::cout << std::endl;
                 return false;
             }
+
+            City cityData;
+            cityData.cityName = city;
+            report.cities.push_back(cityData);
         }
     } else {
         // If no cities are specified, default to all cities
         for (const auto& city : constants::CITIES) {
-            cities.push_back(std::string(city));
+            City cityData;
+            cityData.cityName = city;
+            report.cities.push_back(cityData);
         }
     }
+
     return true;
 }
 
 // Get the list of qualities from the command arguments, validating against known qualities
-bool PriceCommand::getQualities(ArgParser& parser, std::vector<std::string>& qualities) {
+bool PriceCommand::getQualities(ArgParser& parser) {
+    std::vector<std::string> validatedQualities; 
+
     if (parser.commandFlagExists("--quality")) {
-        qualities = parser.getCommandFlagValues("--quality");
+        std::vector<std::string> requestedQualities = parser.getCommandFlagValues("--quality");
+
         // Validate the specified qualities, ensuring they are in the list of known qualities
-        for (const auto& quality : qualities) {
+        for (const auto& quality : requestedQualities) {
             if (std::find(constants::ITEM_QUALITIES.begin(), constants::ITEM_QUALITIES.end(), quality) == constants::ITEM_QUALITIES.end()) {
                 // If an invalid quality is found, print an error message and return false
                 std::cout << "Error: Invalid quality '" << quality << "'. Valid qualities are: ";
@@ -59,54 +70,66 @@ bool PriceCommand::getQualities(ArgParser& parser, std::vector<std::string>& qua
                 std::cout << std::endl;
                 return false;
             }
+
+            validatedQualities.push_back(quality);
         }
     } else {
         // If no qualities are specified, default to all qualities
         for (const auto& quality : constants::ITEM_QUALITIES) {
-            qualities.push_back(std::string(quality));
+            validatedQualities.push_back(std::string(quality));
         }
     }
+
+    for (auto& city : report.cities) {
+        for (const auto& quality : validatedQualities) {
+            Quality qualityResult;
+
+            qualityResult.qualityLevel = std::stoi(quality);
+            city.qualityProfit.push_back(qualityResult);
+        }
+    }
+
     return true;
 }
 
 // Build an API request url from provided information
-std::string PriceCommand::apiURLBuilder(const std::string& itemId, const std::vector<RecipeIngredient>& ingredients, const std::vector<std::string>& cities, const std::vector<std::string>& qualities) {
+std::string PriceCommand::apiURLBuilder() {
     std::string url;
 
     url.append(Settings::getInstance().getRegionURL());
     url.append(std::string(constants::API_PRICE_ENDPOINT));
-    url.append(itemId);
+    url.append(report.craftedItemId);
 
-    for (const RecipeIngredient& ingredient : ingredients) {
+    for (const RecipeIngredient& ingredient : report.cities[0].localIngredients) {
         url.append("," + ingredient.materialItemId);
     }
 
     url.append("?locations=");
 
-    for (const std::string& city : cities) {
-        if (city != cities.front()) {
+    for (const auto& city : report.cities) {
+        if (city.cityName != report.cities.front().cityName) {
             url.append(",");
         }
-        url.append(city);
+        url.append(city.cityName);
     }
 
     url.append("&qualities=");
     
-    for (const std::string& quality : qualities) {
-        if (quality != qualities.front()) {
+    for (const auto& quality : report.cities[0].qualityProfit) {
+        if (quality.qualityLevel != report.cities[0].qualityProfit.front().qualityLevel) {
             url.append(",");
         }
-        url.append(quality);
+        url.append(std::to_string(quality.qualityLevel));
     }
 
     return url;
 }
 
 // Response JSON may need clean up from materials with quality higher than 1
-void PriceCommand::jsonResponseCleanup(json& responseJson, const std::vector<RecipeIngredient>& ingredients) {
+void PriceCommand::jsonResponseCleanup(json& responseJson) {
     std::unordered_set<std::string> ingredientIds;
     // Get ingredient IDs to compare against json item IDs later
-    for (const auto& ing : ingredients) {
+    for (const auto& ing : report.cities[0].localIngredients) {
         ingredientIds.insert(ing.materialItemId);
     }
 
@@ -126,8 +149,6 @@ void PriceCommand::jsonResponseCleanup(json& responseJson, const std::vector<Rec
 // Execute the price command, fetching item information and validating cities and qualities
 void PriceCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
-    std::vector<std::string> cities;
-    std::vector<std::string> qualities;
 
     // Check if at least one argument (the item name) is provided, otherwise print an error message and return
     if (!parser.checkMinArgs(1)) return;
@@ -141,47 +162,48 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
 
     // Fetch the item ID from the database using the provided item name
     ItemDatabase itemDb(std::string(Settings::getInstance().getDatabasePath().string()));
-    std::string itemId = itemDb.getItemIdByDisplayName(itemName);
+    report.craftedItemId = itemDb.getItemIdByDisplayName(itemName);
     // If the item ID is empty, it means the item was not found in the database, so print an error message and return
-    if (itemId.empty()) {
+    if (report.craftedItemId.empty()) {
         std::cout << "Error: Item '" << itemName << "' not found in the database." << std::endl;
         return;
     }
 
-    // Fetch the recipe ingredients for the specified item ID from the database
-    // Store them in a vector for later use
-    std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(itemId);
-
     // Invoke the helper function to get the list of cities from the command arguments, validating against known cities
-    if (!getCities(parser, cities)) return;
+    if (!getCities(parser)) return;
 
     // Invoke the helper function to get the list of qualities from the command arguments, validating against known qualities
-    if (!getQualities(parser, qualities)) return;
+    if (!getQualities(parser)) return;
+
+    // Fetch the recipe ingredients for the specified item ID from the database
+    // Store them in a vector for later use
+    std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(report.craftedItemId);
+    for (auto& city : report.cities) {
+        city.localIngredients = ingredients;
+    }
 
     // Build API url from known data, appending ingredients, cities and qualities
-    std::string url = apiURLBuilder(itemId, ingredients, cities, qualities);
+    std::string url = apiURLBuilder();
 
     // Initialize APIManager, make a request and parse recieved JSON response
     APIManager api(url);
     api.performCurlRequest();
     api.parseJsonResponse();
     json prices = api.getJsonResponse();
-    jsonResponseCleanup(prices, ingredients);
-
-
+    jsonResponseCleanup(prices);
 
     // For demonstration purposes, print the extracted information to the console
-    std::cout << "Price command executed: " << itemName << " (ID: " << itemId << ")";
+    std::cout << "Price command executed: " << itemName << " (ID: " << report.craftedItemId << ")";
     std::cout << "\nCities: ";
-    for (const auto& city : cities) {
-        std::cout << city << " ";
+    for (const auto& city : report.cities) {
+        std::cout << city.cityName << " ";
     }
     std::cout << "\nQualities: ";
-    for (const auto& quality : qualities) {
-        std::cout << quality << " ";
+    for (const auto& quality : report.cities[0].qualityProfit) {
+        std::cout << quality.qualityLevel << " ";
     }
     std::cout << "\nIngredients:" << std::endl;
-    for (const auto& ingredient : ingredients) {
+    for (const auto& ingredient : report.cities[0].localIngredients) {
         std::cout << " - Ingredient: " << ingredient.materialItemId << ", Quantity: " << ingredient.quantity << std::endl;
     }
 

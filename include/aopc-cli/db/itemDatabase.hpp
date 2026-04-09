@@ -7,7 +7,9 @@
 
 struct RecipeIngredient {
     std::string materialItemId;
+    std::string materialItemName;
     int quantity;
+    int price = 0;
 };
 
 class ItemDatabase {
