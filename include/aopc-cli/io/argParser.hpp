@@ -13,6 +13,7 @@ class ArgParser {
         bool commandFlagExists(const std::string& flag);
         // Get the values associated with a specific flag
         std::vector<std::string> getCommandFlagValues(const std::string& flag);
+        std::vector<std::string> getPreFlagValues();
 
         bool checkExactArgs(size_t expectedCount);
         bool checkMinArgs(size_t minCount);

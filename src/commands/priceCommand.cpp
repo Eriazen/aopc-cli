@@ -6,22 +6,6 @@
 #include <unordered_set>
 
 
-// Extract the item name from the command arguments, stopping at the first flag
-std::string PriceCommand::getItemName(const std::vector<std::string>& args) {
-    std::string itemName;
-    for (size_t i = 0; i < args.size(); ++i) {
-        if (args[i][0] != '-') { // Stop at the first flag
-            if (!itemName.empty()) {
-                itemName += " ";
-            }
-            itemName += args[i];
-        } else {
-            break;
-        }
-    }
-    return itemName;
-}
-
 // Get the list of cities from the command arguments, validating against known cities
 bool PriceCommand::getCities(ArgParser& parser) {
     if (parser.commandFlagExists("--cities")) {
@@ -237,22 +221,30 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     if (!parser.checkMinArgs(1)) return;
 
     // Extract the item name from the command arguments, stopping at the first flag
-    std::string itemName = getItemName(args);
-    if (itemName.empty()) {
+    std::vector<std::string> itemNameVector = parser.getPreFlagValues();
+    for (const auto& word : itemNameVector) {
+        if (word != itemNameVector[0]) {
+            m_report.craftedItemName += " ";
+        }
+
+        m_report.craftedItemName += word;
+    }
+
+    if (m_report.craftedItemName.empty()) {
         std::cout << "Error: No item name provided." << std::endl;
         return;
     }
 
     // Fetch the item ID from the database using the provided item name
     ItemDatabase itemDb(std::string(m_settings.getDatabasePath().string()));
-    ItemInfo info = itemDb.getItemInfoByDisplayName(itemName);
+    ItemInfo info = itemDb.getItemInfoByDisplayName(m_report.craftedItemName);
     m_report.craftedItemId = info.itemId;
     m_report.silverCost = info.silverCost;
     m_report.craftingFocus = info.craftingFocus;
 
     // If the item ID is empty, it means the item was not found in the database, so print an error message and return
     if (m_report.craftedItemId.empty()) {
-        std::cout << "Error: Item '" << itemName << "' not found in the database." << std::endl;
+        std::cout << "Error: Item '" << m_report.craftedItemName << "' not found in the database." << std::endl;
         return;
     }
 
@@ -290,7 +282,7 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     // For demonstration purposes, print the extracted information to the console
     for (const auto& city : m_report.cities) {
         std::cout << "== " << city.cityName << " ==========================" << std::endl;
-        std::cout << "   " << m_report.craftedItemId << std::endl;
+        std::cout << "   " << m_report.craftedItemId << "   " << m_report.craftedItemName << std::endl;
         
         for (const auto& quality : city.qualityProfit) {
             std::cout << "      " << quality.qualityLevel << "   " << quality.marketSellPrice << "   " << quality.finalProfit << std::endl;

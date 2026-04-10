@@ -23,6 +23,19 @@ std::vector<std::string> ArgParser::getCommandFlagValues(const std::string& flag
     return values;
 }
 
+std::vector<std::string> ArgParser::getPreFlagValues() {
+    std::vector<std::string> preFlagValues;
+    for (size_t i = 0; i < m_args.size(); ++i) {
+        if (m_args[i][0] != '-') { // Stop at the first flag
+            preFlagValues.push_back(m_args[i]);
+        } else {
+            break;
+        }
+    }
+
+    return preFlagValues;
+}
+
 // Check if the number of arguments meets the expected count, and print an error message if not
 bool ArgParser::checkMinArgs(size_t minCount) {
     if (m_args.size() < minCount) {

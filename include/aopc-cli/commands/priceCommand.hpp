@@ -28,6 +28,7 @@ struct City {
 };
 
 struct PriceReport {
+    std::string craftedItemName;
     std::string craftedItemId;
     float appliedRrr;
     float appliedTaxRate;
@@ -44,11 +45,11 @@ class PriceCommand : public Command {
         PriceReport m_report;
         Settings& m_settings = Settings::getInstance();
 
-        std::string getItemName(const std::vector<std::string>& args);
         bool getCities(ArgParser& parser);
         bool getQualities(ArgParser& parser);
         std::string apiURLBuilder();
         void jsonResponseCleanup(json& respondeJson);
         void getMarketPrices(const json& responseJson);
         void calculateProfit();
+        void printPriceReport();
 };
