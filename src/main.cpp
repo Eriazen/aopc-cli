@@ -16,7 +16,7 @@ int main(int, char** argv){
     if (!settings.loadSettingsFromFile(settingsPath)) {
         settings.setDatabasePath(dbPath);
         settings.setRegionURL("europe");
-        settings.setMarketTax(0.8f);
+        settings.setMarketTax(0.08f);
         settings.setResourceReturnRate(0.153f);
         settings.setStationFee(500);
         // Save default settings to file
