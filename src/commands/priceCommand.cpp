@@ -218,11 +218,11 @@ void PriceCommand::calculateProfit() {
         
         // Apply resource return rate discount
         float rrr_factor = 1.0f - m_report.appliedRrr;
-        city.materialCostWithRrr = static_cast<int>(ceilf(materialCost * rrr_factor));
+        city.materialCostWithRrr = static_cast<int>(ceilf(static_cast<float>(materialCost) * rrr_factor));
 
         // Calculate profit for each quality tier
         for (auto& quality : city.qualityProfit) {
-            float tax_base = quality.marketSellPrice * (1.0f - m_report.appliedTaxRate - SETUP_FEE);
+            float tax_base = static_cast<float>(quality.marketSellPrice) * (1.0f - m_report.appliedTaxRate - SETUP_FEE);
             quality.taxPaid = static_cast<int>(ceilf(tax_base));
             quality.finalProfit = quality.marketSellPrice - quality.taxPaid - city.materialCostWithRrr - m_report.silverCost;
         }
@@ -284,23 +284,21 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     m_report.appliedTaxRate = m_settings.getMarketTax();
     m_report.appliedRrr = m_settings.getResourceReturnRate();
 
-    // For demonstration purposes, print the extracted information to the console
-    std::cout << "Price command executed: " << itemName << " (ID: " << m_report.craftedItemId << ")";
-    std::cout << "\nCities: ";
-    for (const auto& city : m_report.cities) {
-        std::cout << city.cityName << " ";
-    }
-    std::cout << "\nQualities: ";
-    for (const auto& quality : m_report.cities[0].qualityProfit) {
-        std::cout << quality.qualityLevel << " ";
-    }
-    std::cout << "\nIngredients:" << std::endl;
-    for (const auto& ingredient : m_report.cities[0].localIngredients) {
-        std::cout << " - Ingredient: " << ingredient.materialItemId << ", Quantity: " << ingredient.quantity << std::endl;
-    }
+    // Calculate profit margins for each quality tier
+    calculateProfit();
 
-    std::cout << prices << std::endl;
-    std::cout << m_report.cities[0].qualityProfit[0].marketSellPrice << std::endl;
-    std::cout << m_report.cities[0].localIngredients[0].materialItemId << std::endl;
-    std::cout << m_report.cities[0].localIngredients[0].marketPrice << std::endl;
+    // For demonstration purposes, print the extracted information to the console
+    for (const auto& city : m_report.cities) {
+        std::cout << "== " << city.cityName << " ==========================" << std::endl;
+        std::cout << "   " << m_report.craftedItemId << std::endl;
+        
+        for (const auto& quality : city.qualityProfit) {
+            std::cout << "      " << quality.qualityLevel << "   " << quality.marketSellPrice << "   " << quality.finalProfit << std::endl;
+        }
+        std::cout << std::endl;
+        for (const auto& ingredient : city.localIngredients) {
+            std::cout << "      " << ingredient.materialItemId << "   " << ingredient.quantity << "   " << ingredient.marketPrice * ingredient.quantity << std::endl;
+        }
+        std::cout << "      " << city.materialCostWithRrr << std::endl;
+    }
 }
