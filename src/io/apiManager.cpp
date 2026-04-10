@@ -18,9 +18,9 @@ bool APIManager::performCurlRequest() {
         return false;
     }
 
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &m_response);
 
     CURLcode res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
@@ -35,15 +35,11 @@ bool APIManager::performCurlRequest() {
 
 bool APIManager::parseJsonResponse() {
     try {
-        jsonResponse = json::parse(response);
+        m_jsonResponse = json::parse(m_response);
 
         return true;
     } catch (json::parse_error& e) {
         std::cerr << "Error: Couldn't parse curl response with exception '" << e.what() << "'." << std::endl;
         return false;
     }
-}
-
-json APIManager::getJsonResponse() const {
-    return jsonResponse;
 }

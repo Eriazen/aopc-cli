@@ -9,14 +9,15 @@
 
 // Initialize the command map with available commands, associating command names with their respective command objects
 void CommandHandler::initializeCommands() {
-    commands["help"] = []() { return std::make_unique<HelpCommand>(); };
-    commands["exit"] = []() { return std::make_unique<ExitCommand>(); };
-    commands["price"] = []() { return std::make_unique<PriceCommand>(); };
+    m_commands["help"] = []() { return std::make_unique<HelpCommand>(); };
+    m_commands["exit"] = []() { return std::make_unique<ExitCommand>(); };
+    m_commands["price"] = []() { return std::make_unique<PriceCommand>(); };
 }
 
 // Main loop to continuously read user input, parse it, and execute the corresponding command
 void CommandHandler::run() {
     while (true) {
+        std::string userInput;
         // Prompt user for input to execute a command
         std::cout << "> ";
         std::getline(std::cin, userInput);
@@ -40,8 +41,8 @@ void CommandHandler::run() {
 
         // Find the command in the command map and execute it with the provided arguments.
         // If the command is not found, execute the "invalid" command to handle unrecognized commands.
-        auto it = commands.find(commandName);
-        if (it != commands.end()) {
+        auto it = m_commands.find(commandName);
+        if (it != m_commands.end()) {
             std::unique_ptr<Command> newCommandInstance = it->second();
             newCommandInstance->execute(args);
         } else {

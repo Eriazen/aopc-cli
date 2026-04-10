@@ -7,7 +7,7 @@
 // Class to parse command-line arguments
 class ArgParser {
     public:
-        ArgParser(const std::vector<std::string>& arguments) : args(arguments) {};
+        ArgParser(const std::vector<std::string>& arguments) : m_args(arguments) {};
 
         // Check if a specific flag exists in the arguments
         bool commandFlagExists(const std::string& flag);
@@ -18,5 +18,5 @@ class ArgParser {
         bool checkMinArgs(size_t minCount);
 
     private:
-        std::vector<std::string> args;
+        std::vector<std::string> m_args;
 };

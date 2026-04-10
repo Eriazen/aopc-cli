@@ -22,5 +22,5 @@ class ItemDatabase {
         std::vector<RecipeIngredient> getRecipeIngredients(const std::string& craftedItemId);
 
     private:
-        sqlite3* db;
+        sqlite3* m_db;
 };

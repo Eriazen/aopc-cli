@@ -9,17 +9,17 @@ using json = nlohmann::json;
 
 class APIManager {
     public:
-        APIManager(const std::string& apiURL) : url(apiURL) {};
+        APIManager(const std::string& apiURL) : m_url(apiURL) {};
 
         bool performCurlRequest();
         bool parseJsonResponse();
 
-        json getJsonResponse() const;
+        json getJsonResponse() const { return m_jsonResponse; };
 
     private:
-        const std::string url;
-        std::string response;
-        json jsonResponse;
+        const std::string m_url;
+        std::string m_response;
+        json m_jsonResponse;
 
         static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userData);
 };

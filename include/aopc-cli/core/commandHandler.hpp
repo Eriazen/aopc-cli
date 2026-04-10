@@ -13,8 +13,7 @@ class CommandHandler {
         void run();
 
     private:
-        std::string userInput;
-        std::unordered_map<std::string, std::function<std::unique_ptr<Command>()>> commands;
+        std::unordered_map<std::string, std::function<std::unique_ptr<Command>()>> m_commands;
 
         void initializeCommands();
 };
