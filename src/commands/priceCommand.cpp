@@ -1,6 +1,5 @@
 #include "aopc-cli/commands/priceCommand.hpp"
 #include "aopc-cli/core/constants.hpp"
-#include "aopc-cli/core/settings.hpp"
 #include "aopc-cli/io/apiManager.hpp"
 #include <iostream>
 #include <algorithm>
@@ -40,14 +39,14 @@ bool PriceCommand::getCities(ArgParser& parser) {
 
             City cityData;
             cityData.cityName = city;
-            report.cities.push_back(cityData);
+            m_report.cities.push_back(cityData);
         }
     } else {
         // If no cities are specified, default to all cities
         for (const auto& city : constants::CITIES) {
             City cityData;
             cityData.cityName = city;
-            report.cities.push_back(cityData);
+            m_report.cities.push_back(cityData);
         }
     }
 
@@ -56,7 +55,7 @@ bool PriceCommand::getCities(ArgParser& parser) {
 
 // Get the list of qualities from the command arguments, validating against known qualities
 bool PriceCommand::getQualities(ArgParser& parser) {
-    std::vector<std::string> validatedQualities; 
+    std::vector<std::string> validatedQualities;
 
     if (parser.commandFlagExists("--quality")) {
         std::vector<std::string> requestedQualities = parser.getCommandFlagValues("--quality");
@@ -80,7 +79,7 @@ bool PriceCommand::getQualities(ArgParser& parser) {
         }
     }
 
-    for (auto& city : report.cities) {
+    for (auto& city : m_report.cities) {
         for (const auto& quality : validatedQualities) {
             Quality qualityResult;
 
@@ -96,18 +95,18 @@ bool PriceCommand::getQualities(ArgParser& parser) {
 std::string PriceCommand::apiURLBuilder() {
     std::string url;
 
-    url.append(Settings::getInstance().getRegionURL());
+    url.append(m_settings.getRegionURL());
     url.append(std::string(constants::API_PRICE_ENDPOINT));
-    url.append(report.craftedItemId);
+    url.append(m_report.craftedItemId);
 
-    for (const RecipeIngredient& ingredient : report.cities[0].localIngredients) {
+    for (const RecipeIngredient& ingredient : m_report.cities[0].localIngredients) {
         url.append("," + ingredient.materialItemId);
     }
 
     url.append("?locations=");
 
-    for (const auto& city : report.cities) {
-        if (city.cityName != report.cities.front().cityName) {
+    for (const auto& city : m_report.cities) {
+        if (city.cityName != m_report.cities.front().cityName) {
             url.append(",");
         }
         url.append(city.cityName);
@@ -115,8 +114,8 @@ std::string PriceCommand::apiURLBuilder() {
 
     url.append("&qualities=");
     
-    for (const auto& quality : report.cities[0].qualityProfit) {
-        if (quality.qualityLevel != report.cities[0].qualityProfit.front().qualityLevel) {
+    for (const auto& quality : m_report.cities[0].qualityProfit) {
+        if (quality.qualityLevel != m_report.cities[0].qualityProfit.front().qualityLevel) {
             url.append(",");
         }
         url.append(std::to_string(quality.qualityLevel));
@@ -129,7 +128,7 @@ std::string PriceCommand::apiURLBuilder() {
 void PriceCommand::jsonResponseCleanup(json& responseJson) {
     std::unordered_set<std::string> ingredientIds;
     // Get ingredient IDs to compare against json item IDs later
-    for (const auto& ing : report.cities[0].localIngredients) {
+    for (const auto& ing : m_report.cities[0].localIngredients) {
         ingredientIds.insert(ing.materialItemId);
     }
 
@@ -142,6 +141,90 @@ void PriceCommand::jsonResponseCleanup(json& responseJson) {
             it = responseJson.erase(it);
         } else {
             ++it;
+        }
+    }
+}
+
+void PriceCommand::getMarketPrices(const json& responseJson) {
+    for (const auto& item : responseJson) {
+        if (item["item_id"] != m_report.craftedItemId) {
+            continue;
+        }
+
+        std::string itemCity = item["city"];
+        int itemQuality = item["quality"];
+        int marketPrice = item["sell_price_min"];
+
+        for (auto& city : m_report.cities) {
+            if (city.cityName != itemCity) {
+                continue;
+            }
+
+            for (auto& quality : city.qualityProfit) {
+                if (quality.qualityLevel == itemQuality) {
+                    quality.marketSellPrice = marketPrice;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    // Build ingredient ID lookup set for fast filtering
+    std::unordered_set<std::string> ingredientIds;
+    for (const auto& ing : m_report.cities[0].localIngredients) {
+        ingredientIds.insert(ing.materialItemId);
+    }
+    
+    // Process ingredient prices
+    for (const auto& item : responseJson) {
+        std::string itemId = item["item_id"];
+        
+        // Skip if it's the crafted item or not an ingredient
+        if (itemId == m_report.craftedItemId || !ingredientIds.count(itemId)) {
+            continue;
+        }
+
+        std::string itemCity = item["city"];
+        int marketPrice = item["sell_price_min"];
+
+        for (auto& city : m_report.cities) {
+            if (city.cityName != itemCity) {
+                continue;
+            }
+
+            for (auto& ingredient : city.localIngredients) {
+                if (ingredient.materialItemId == itemId) {
+                    ingredient.marketPrice = marketPrice;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+}
+
+void PriceCommand::calculateProfit() {
+    constexpr float SETUP_FEE = 0.025f;  // 2.5% setup fee
+
+    for (auto& city : m_report.cities) {
+        // Calculate total ingredient cost
+        int materialCost = 0;
+        for (const auto& ingredient : city.localIngredients) {
+            materialCost += ingredient.marketPrice * ingredient.quantity;
+        }
+
+        city.baseMaterialCost = materialCost;
+        
+        // Apply resource return rate discount
+        float rrr_factor = 1.0f - m_report.appliedRrr;
+        city.materialCostWithRrr = static_cast<int>(ceilf(materialCost * rrr_factor));
+
+        // Calculate profit for each quality tier
+        for (auto& quality : city.qualityProfit) {
+            float tax_base = quality.marketSellPrice * (1.0f - m_report.appliedTaxRate - SETUP_FEE);
+            quality.taxPaid = static_cast<int>(ceilf(tax_base));
+            quality.finalProfit = quality.marketSellPrice - quality.taxPaid - city.materialCostWithRrr - m_report.silverCost;
         }
     }
 }
@@ -161,10 +244,14 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     }
 
     // Fetch the item ID from the database using the provided item name
-    ItemDatabase itemDb(std::string(Settings::getInstance().getDatabasePath().string()));
-    report.craftedItemId = itemDb.getItemIdByDisplayName(itemName);
+    ItemDatabase itemDb(std::string(m_settings.getDatabasePath().string()));
+    ItemInfo info = itemDb.getItemInfoByDisplayName(itemName);
+    m_report.craftedItemId = info.itemId;
+    m_report.silverCost = info.silverCost;
+    m_report.craftingFocus = info.craftingFocus;
+
     // If the item ID is empty, it means the item was not found in the database, so print an error message and return
-    if (report.craftedItemId.empty()) {
+    if (m_report.craftedItemId.empty()) {
         std::cout << "Error: Item '" << itemName << "' not found in the database." << std::endl;
         return;
     }
@@ -177,8 +264,8 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
 
     // Fetch the recipe ingredients for the specified item ID from the database
     // Store them in a vector for later use
-    std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(report.craftedItemId);
-    for (auto& city : report.cities) {
+    std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(m_report.craftedItemId);
+    for (auto& city : m_report.cities) {
         city.localIngredients = ingredients;
     }
 
@@ -192,20 +279,28 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     json prices = api.getJsonResponse();
     jsonResponseCleanup(prices);
 
+    // Extract market prices from response JSON, get necessary values from Settings
+    getMarketPrices(prices);
+    m_report.appliedTaxRate = m_settings.getMarketTax();
+    m_report.appliedRrr = m_settings.getResourceReturnRate();
+
     // For demonstration purposes, print the extracted information to the console
-    std::cout << "Price command executed: " << itemName << " (ID: " << report.craftedItemId << ")";
+    std::cout << "Price command executed: " << itemName << " (ID: " << m_report.craftedItemId << ")";
     std::cout << "\nCities: ";
-    for (const auto& city : report.cities) {
+    for (const auto& city : m_report.cities) {
         std::cout << city.cityName << " ";
     }
     std::cout << "\nQualities: ";
-    for (const auto& quality : report.cities[0].qualityProfit) {
+    for (const auto& quality : m_report.cities[0].qualityProfit) {
         std::cout << quality.qualityLevel << " ";
     }
     std::cout << "\nIngredients:" << std::endl;
-    for (const auto& ingredient : report.cities[0].localIngredients) {
+    for (const auto& ingredient : m_report.cities[0].localIngredients) {
         std::cout << " - Ingredient: " << ingredient.materialItemId << ", Quantity: " << ingredient.quantity << std::endl;
     }
 
     std::cout << prices << std::endl;
+    std::cout << m_report.cities[0].qualityProfit[0].marketSellPrice << std::endl;
+    std::cout << m_report.cities[0].localIngredients[0].materialItemId << std::endl;
+    std::cout << m_report.cities[0].localIngredients[0].marketPrice << std::endl;
 }

@@ -18,25 +18,27 @@ ItemDatabase::~ItemDatabase() {
 
 // Retrieves the internal item ID from the database based on the provided display name (case-insensitive)
 // If the item is not found or if the database connection is not available, it returns an empty string
-std::string ItemDatabase::getItemIdByDisplayName(const std::string& displayName) {
-    if (!m_db) return ""; // Return empty string if database connection is not available
+ItemInfo ItemDatabase::getItemInfoByDisplayName(const std::string& displayName) {
+    ItemInfo info;
+    if (!m_db) {info.itemId = ""; return info; }; // Return empty string if database connection is not available
 
     sqlite3_stmt* stmt;
-    std::string internalId;
 
     // Prepare the SQL query to retrieve the internal ID based on the display name (case-insensitive)
-    const char* query = "SELECT internal_id FROM Items WHERE display_name = ? COLLATE NOCASE LIMIT 1";
+    const char* query = "SELECT internal_id, silver_cost, crafting_focus FROM Items WHERE display_name = ? COLLATE NOCASE LIMIT 1";
     if (sqlite3_prepare_v2(m_db, query, -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_text(stmt, 1, displayName.c_str(), -1, SQLITE_TRANSIENT); // Bind the display name parameter
 
         // Execute the query and retrieve the internal ID if a matching item is found
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            internalId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            info.itemId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            info.silverCost = reinterpret_cast<int>(sqlite3_column_int(stmt, 1));
+            info.craftingFocus = reinterpret_cast<int>(sqlite3_column_int(stmt, 2));
         }
     }
     sqlite3_finalize(stmt); // Finalize the prepared statement to free resources
 
-    return internalId;
+    return info;
 }
 
 // Retrieves the list of recipe ingredients for a given crafted item ID from the database
