@@ -48,8 +48,30 @@ def items_without_display_names():
     results = cursor.fetchall()
     return [row[0] for row in results]
 
+def max_length_item_name():
+    cursor.execute('''
+        SELECT MAX(LENGTH(display_name))
+        FROM Items
+    ''')
+
+    name_length = cursor.fetchall()
+
+    cursor.execute('''
+        SELECT display_name
+        FROM Items
+        WHERE LENGTH(display_name) = ?
+    ''', name_length[0])
+
+    display_name = cursor.fetchall()
+
+    return {
+        'display_name': display_name[0][0],
+        'length': name_length[0][0]
+    }
+
 if __name__ == "__main__":
     print(query_crafting_requirements('T5_BAG@3'))
     print(query_item_info('T5_BAG@4'))
-    print(query_item_info('T7_WOOD_LEVEL3'))
+    print(query_item_info('T7_WOOD_LEVEL3@3'))
     print(items_without_display_names())
+    print(max_length_item_name())
