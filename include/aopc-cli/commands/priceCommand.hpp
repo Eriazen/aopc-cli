@@ -11,18 +11,18 @@ using json = nlohmann::json;
 
 struct Quality {
     int qualityLevel;
-    int marketSellPrice;
-    int taxPaid;
-    int finalProfit;
+    int marketSellPrice { 0 };
+    int taxPaid { 0 };
+    int finalProfit { 0 };
 };
 
 struct City {
     std::string cityName;
     std::vector<RecipeIngredient> localIngredients;
 
-    int baseMaterialCost;
-    int materialCostWithRrr;
-    int stationFee;
+    int baseMaterialCost { 0 };
+    int materialCostWithRrr { 0 };
+    int stationFee { 0 };
 
     std::vector<Quality> qualityProfit;
 };
@@ -30,10 +30,10 @@ struct City {
 struct PriceReport {
     std::string craftedItemName;
     std::string craftedItemId;
-    float appliedRrr;
-    float appliedTaxRate;
-    int silverCost;
-    int craftingFocus;
+    float appliedRrr { 0.0 };
+    float appliedTaxRate { 0.0 };
+    int silverCost { 0 };
+    int craftingFocus { 0 };
     std::vector<City> cities;
 };
 

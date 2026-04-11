@@ -8,14 +8,14 @@
 struct RecipeIngredient {
     std::string materialItemId;
     std::string materialItemName;
-    int quantity;
-    int marketPrice;
+    int quantity { 0 };
+    int marketPrice { 0 };
 };
 
 struct ItemInfo {
     std::string itemId;
-    int silverCost;
-    int craftingFocus;
+    int silverCost { 0 };
+    int craftingFocus { 0 };
 };
 
 class ItemDatabase {
