@@ -33,6 +33,7 @@ class Settings {
         Settings() = default;
         ~Settings() = default;
 
+        std::filesystem::path m_configPath;
         std::string m_regionURL;
         std::filesystem::path m_databasePath;
         float m_marketTax;
