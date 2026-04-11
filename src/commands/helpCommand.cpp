@@ -83,7 +83,7 @@ USAGE:
 
 SETTINGS:
     database_path    (string) The path to the local item database file.
-                              [Default: {source_directory}/database/aopc_items.json]
+                              [Default: {source_directory}/database/aopc_items.db]
 
     market_tax       (float)  Market tax rate applied to sell price.
                               [Default: 0.08] (e.g., 0.08 for non-premium)
