@@ -34,6 +34,7 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/io/argParser.cpp
     ${source_dir}/io/apiManager.cpp
     ${source_dir}/db/itemDatabase.cpp
+    ${source_dir}/io/formatter.cpp
 )
 
 target_include_directories(aopc-cli PRIVATE
