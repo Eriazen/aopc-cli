@@ -12,20 +12,22 @@ class Settings {
         Settings(const Settings&) = delete;
         Settings& operator=(const Settings&) = delete;
 
+        std::filesystem::path getConfigPath() const {return m_configPath; };
         std::filesystem::path getDatabasePath() const { return m_databasePath; };
         std::string getRegionURL() const { return m_regionURL; };
         float getMarketTax() const { return m_marketTax; };
         float getResourceReturnRate() const { return m_resourceReturnRate; };
         int getStationFee() const { return m_stationFee; };
 
+        bool setConfigPath(const std::filesystem::path& path);
         bool setDatabasePath(const std::filesystem::path& path);
         bool setRegionURL(const std::string& keyword);
         bool setMarketTax(const float& taxFraction);
         bool setResourceReturnRate(const float& rrrFraction);
         bool setStationFee(const int& stationFee);
 
-        bool loadSettingsFromFile(const std::filesystem::path& filePath);
-        bool saveSettingsToFile(const std::filesystem::path& filePath) const;
+        bool loadSettingsFromFile();
+        bool saveSettingsToFile() const;
 
     private:
         Settings() = default;

@@ -12,6 +12,15 @@ Settings& Settings::getInstance() {
     return instance;
 }
 
+bool Settings::setConfigPath(const std::filesystem::path& path) {
+    if (std::filesystem::exists(path) && path.extension() == ".json") {
+        m_configPath = path.string();
+        return true;
+    }
+
+    return false;
+}
+
 // Set the database path, ensuring it exists and has the correct extension
 bool Settings::setDatabasePath(const std::filesystem::path& path) {
     if (std::filesystem::exists(path) && path.extension() == ".db") {
