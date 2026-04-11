@@ -210,7 +210,7 @@ void PriceCommand::calculateProfit() {
 
         // Calculate profit for each quality tier
         for (auto& quality : city.qualityProfit) {
-            float tax_base = static_cast<float>(quality.marketSellPrice) * (1.0f - m_report.appliedTaxRate - SETUP_FEE);
+            float tax_base = static_cast<float>(quality.marketSellPrice) * (m_report.appliedTaxRate + SETUP_FEE);
             quality.taxPaid = static_cast<int>(ceilf(tax_base));
             quality.finalProfit = quality.marketSellPrice - quality.taxPaid - city.materialCostWithRrr - m_report.silverCost;
         }
