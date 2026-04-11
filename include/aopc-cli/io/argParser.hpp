@@ -15,8 +15,8 @@ class ArgParser {
         std::vector<std::string> getCommandFlagValues(const std::string& flag);
         std::vector<std::string> getPreFlagValues();
 
-        bool checkExactArgs(size_t expectedCount);
-        bool checkMinArgs(size_t minCount);
+        bool checkExactArgs(size_t expectedCount, bool printErr = true);
+        bool checkMinArgs(size_t minCount, bool printErr = true);
 
     private:
         std::vector<std::string> m_args;

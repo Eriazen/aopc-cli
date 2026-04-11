@@ -37,19 +37,25 @@ std::vector<std::string> ArgParser::getPreFlagValues() {
 }
 
 // Check if the number of arguments meets the expected count, and print an error message if not
-bool ArgParser::checkMinArgs(size_t minCount) {
+bool ArgParser::checkMinArgs(size_t minCount, bool printErr) {
     if (m_args.size() < minCount) {
-        std::cout << "Error: Expected at least " << minCount << " arguments, but got " << m_args.size() << "." << std::endl;
+        if (printErr) {
+            std::cout << "Error: Expected at least " << minCount << " arguments, but got " << m_args.size() << "." << std::endl;
+        }
         return false;
     }
+    
     return true;
 }
 
 // Check if the number of arguments meets the expected count, and print an error message if not
-bool ArgParser::checkExactArgs(size_t expectedCount) {
+bool ArgParser::checkExactArgs(size_t expectedCount, bool printErr) {
     if (m_args.size() != expectedCount) {
-        std::cout << "Error: Expected exactly " << expectedCount << " arguments, but got " << m_args.size() << "." << std::endl;
+        if (printErr) {
+            std::cout << "Error: Expected exactly " << expectedCount << " arguments, but got " << m_args.size() << "." << std::endl;
+        }
         return false;
     }
+
     return true;
 }
