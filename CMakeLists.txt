@@ -29,7 +29,6 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/core/settings.cpp
     ${source_dir}/commands/helpCommand.cpp
     ${source_dir}/commands/exitCommand.cpp
-    ${source_dir}/commands/invalidCommand.cpp
     ${source_dir}/commands/priceCommand.cpp
     ${source_dir}/io/argParser.cpp
     ${source_dir}/io/apiManager.cpp
