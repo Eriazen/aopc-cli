@@ -45,11 +45,14 @@ class PriceCommand : public Command {
         PriceReport m_report;
         Settings& m_settings = Settings::getInstance();
 
+        // Argument parsing
         bool getCities(ArgParser& parser);
         bool getQualities(ArgParser& parser);
+        // API handling and calculation
         std::string apiURLBuilder();
         void jsonResponseCleanup(json& respondeJson);
         void getMarketPrices(const json& responseJson);
+        // Output functions
         void calculateProfit();
         void printPriceReport();
 };

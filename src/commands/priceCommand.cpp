@@ -1,7 +1,9 @@
 #include "aopc-cli/commands/priceCommand.hpp"
 #include "aopc-cli/core/constants.hpp"
 #include "aopc-cli/io/apiManager.hpp"
+#include "aopc-cli/io/formatter.hpp"
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <unordered_set>
 
@@ -217,6 +219,64 @@ void PriceCommand::calculateProfit() {
     }
 }
 
+void PriceCommand::printPriceReport() {
+    std::cout << std::fixed << std::setprecision(1);
+
+    std::cout << std::string(constants::TOTAL_LINE_WIDTH, '=') << '\n';
+    std::cout << "REPORT: " << m_report.craftedItemName << '\n';
+    std::cout << std::string(constants::TOTAL_LINE_WIDTH, '=') << '\n' << '\n';
+
+    std::cout << "[ Crafting Parameters ]" << '\n';
+        std::cout << "  "
+            << std::left << std::setw(12) << "Tax Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedTaxRate * 100, 1)
+            << std::setw(12) << "Return Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedRrr * 100, 1) << '\n';
+
+        std::cout << "  "
+            << std::left << std::setw(12) << "Silver Cost" << ": " << std::setw(31) << TextFormatter::formatCurrency(m_report.silverCost, "s")
+            << std::setw(12) << "Focus Cost" << ": " << TextFormatter::formatNumber(m_report.craftingFocus) << '\n' << '\n';
+
+    for (const auto& city : m_report.cities) {
+        unsigned int remainingWidth = constants::TOTAL_LINE_WIDTH - (3 + static_cast<unsigned int>(city.cityName.length()) + 1);
+        std::cout << "-- " << city.cityName << " " << std::string(remainingWidth, '-') << '\n' << '\n';
+
+        std::cout << "[ Material Costs ]" << '\n';
+        std::cout << "  "
+            << std::left << std::setw(30) << "Material Name"
+            << std::right << std::setw(10) << "Qty"
+            << std::setw(25) << "Market Price"
+            << std::setw(25) << "Total Price" << '\n';
+        std::cout << "  " << std::string(90, '-') << '\n';
+
+        for (const auto& ingredient : city.localIngredients) {
+            std::cout << "  "
+                << std::left << std::setw(30) << ingredient.materialItemName
+                << std::right << std::setw(10) << TextFormatter::formatNumber(ingredient.quantity)
+                << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice, "s")
+                << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice * ingredient.quantity, "s") << '\n';
+        }
+        std::cout << "  " << std::string(90, '-') << '\n';
+        std::cout << std::right << std::setw(76) << "Total Base Cost (w/ RRR):" << std::setw(16) << TextFormatter::formatCurrency(city.materialCostWithRrr, "s") << '\n' << '\n';
+
+        std::cout << "[ Projected Profits ]" << '\n';
+        std::cout << "  "
+            << std::left << std::setw(20) << "Quality"
+            << std::right << std::setw(20) << "Market Price"
+            << std::setw(20) << "Profit" << '\n';
+        std::cout << "  " << std::string(60, '-') << '\n';
+
+        for (const auto& quality : city.qualityProfit) {
+            std::cout << "  "
+                << std::left << std::setw(20) << TextFormatter::formatNumber(quality.qualityLevel)
+                << std::right << std::setw(20) << TextFormatter::formatCurrency(quality.marketSellPrice, "s")
+                << std::setw(20) << TextFormatter::formatCurrency(quality.finalProfit, "s") << '\n';
+        }
+        std::cout << "  " << std::string(60, '-') << '\n' << '\n';
+
+    }
+
+    std::cout << std::defaultfloat;
+}
+
 // Execute the price command, fetching item information and validating cities and qualities
 void PriceCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
@@ -285,18 +345,5 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     // Calculate profit margins for each quality tier
     calculateProfit();
 
-    // For demonstration purposes, print the extracted information to the console
-    for (const auto& city : m_report.cities) {
-        std::cout << "== " << city.cityName << " ==========================" << std::endl;
-        std::cout << "   " << m_report.craftedItemId << "   " << m_report.craftedItemName << std::endl;
-        
-        for (const auto& quality : city.qualityProfit) {
-            std::cout << "      " << quality.qualityLevel << "   " << quality.marketSellPrice << "   " << quality.finalProfit << std::endl;
-        }
-        std::cout << std::endl;
-        for (const auto& ingredient : city.localIngredients) {
-            std::cout << "      " << ingredient.materialItemId << "   " << ingredient.quantity << "   " << ingredient.marketPrice * ingredient.quantity << std::endl;
-        }
-        std::cout << "      " << city.materialCostWithRrr << std::endl;
-    }
+    printPriceReport();
 }
