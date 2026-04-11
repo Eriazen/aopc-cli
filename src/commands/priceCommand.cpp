@@ -139,6 +139,8 @@ void PriceCommand::getMarketPrices(const json& responseJson) {
         int itemQuality = item["quality"];
         int marketPrice = item["sell_price_min"];
 
+        itemCity.erase(std::remove_if(itemCity.begin(), itemCity.end(), ::isspace), itemCity.end());
+
         for (auto& city : m_report.cities) {
             if (city.cityName != itemCity) {
                 continue;

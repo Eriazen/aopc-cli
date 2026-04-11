@@ -19,6 +19,9 @@ namespace constants {
     inline constexpr std::array<std::string_view, 8> CITIES { "Caerleon", "Lymhurst", "Bridgewater", "Martlock", "Thetford", "FortSterling", "Brecilien", "BlackMarket" };
     //inline constexpr std::array<std::string_view, 5> ITEM_QUALITIES { "Normal", "Good", "Outstanding", "Excellent", "Masterpiece" };
     inline constexpr std::array<std::string_view, 5> ITEM_QUALITIES { "1", "2", "3", "4", "5" };
+
+    // Output formatting
+    inline constexpr unsigned int TOTAL_LINE_WIDTH { 100 };
 }
 
 #endif // CONSTANTS_HPP
