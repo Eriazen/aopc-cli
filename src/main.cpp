@@ -10,17 +10,17 @@ int main(int, char** argv){
     // Initialize settings and command handler
     std::filesystem::path exeDir = std::filesystem::absolute(argv[0]).parent_path();
     std::filesystem::path dbPath = exeDir / "database" / "aopc_items.db";
-    std::filesystem::path settingsPath = exeDir / "config" / "settings.json";
+    std::filesystem::path configPath = exeDir / "config" / "general.json";
 
     // Load settings from file (if it exists)
-    if (!settings.loadSettingsFromFile(settingsPath)) {
+    if (!settings.loadSettingsFromFile(configPath)) {
         settings.setDatabasePath(dbPath);
         settings.setRegionURL("europe");
         settings.setMarketTax(0.08f);
         settings.setResourceReturnRate(0.153f);
         settings.setStationFee(500);
         // Save default settings to file
-        settings.saveSettingsToFile(settingsPath);
+        settings.saveSettingsToFile(configPath);
     }
 
     // Print welcome message
