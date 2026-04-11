@@ -73,8 +73,8 @@ bool Settings::setStationFee(const int& stationFee) {
     return false;
 }
 
-bool Settings::loadSettingsFromFile(const std::filesystem::path& filePath) {
-    std::ifstream file(filePath);
+bool Settings::loadSettingsFromFile() {
+    std::ifstream file(m_configPath);
 
     if (!file.is_open()) return false;
 
@@ -96,13 +96,13 @@ bool Settings::loadSettingsFromFile(const std::filesystem::path& filePath) {
         return true;
     } catch (const std::exception& e) {
         // Catch parsing errors (corrupted JSON file, etc.)
-        std::cerr << "Error: Couldn't parse file '"<< filePath <<"' with exception '" << e.what() << "'." << std::endl;
+        std::cerr << "Error: Couldn't parse file '"<< m_configPath <<"' with exception '" << e.what() << "'." << std::endl;
         std::cerr << "Writing default value to a settings file.\n" << std::endl;
         return false;
     }
 }
 
-bool Settings::saveSettingsToFile(const std::filesystem::path& filePath) const {
+bool Settings::saveSettingsToFile() const {
     // Create a JSON object to store currect settings in
     json j;
     j["database_path"] = m_databasePath.string();
@@ -112,9 +112,9 @@ bool Settings::saveSettingsToFile(const std::filesystem::path& filePath) const {
     j["station_fee"] = std::to_string(m_stationFee);
 
     // Open settings file, overwriting existing settings
-    std::ofstream file(filePath, std::ios::trunc);
+    std::ofstream file(m_configPath, std::ios::trunc);
     if (!file.is_open()) {
-        std::cerr << "Error: Couldn't create setting file at '" << filePath << "'." << std::endl;
+        std::cerr << "Error: Couldn't create setting file at '" << m_configPath << "'." << std::endl;
         return false;
     }
 
