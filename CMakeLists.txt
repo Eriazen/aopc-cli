@@ -30,6 +30,7 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/commands/helpCommand.cpp
     ${source_dir}/commands/exitCommand.cpp
     ${source_dir}/commands/priceCommand.cpp
+    ${source_dir}/commands/configCommand.cpp
     ${source_dir}/io/argParser.cpp
     ${source_dir}/io/apiManager.cpp
     ${source_dir}/db/itemDatabase.cpp

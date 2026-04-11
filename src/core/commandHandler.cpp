@@ -5,6 +5,7 @@
 #include "aopc-cli/commands/exitCommand.hpp"
 #include "aopc-cli/commands/invalidCommand.hpp"
 #include "aopc-cli/commands/priceCommand.hpp"
+#include "aopc-cli/commands/configCommand.hpp"
 
 
 // Initialize the command map with available commands, associating command names with their respective command objects
@@ -12,6 +13,7 @@ void CommandHandler::initializeCommands() {
     m_commands["help"] = []() { return std::make_unique<HelpCommand>(); };
     m_commands["exit"] = []() { return std::make_unique<ExitCommand>(); };
     m_commands["price"] = []() { return std::make_unique<PriceCommand>(); };
+    m_commands["config"] = []() { return std::make_unique<ConfigCommand>(); };
 }
 
 // Main loop to continuously read user input, parse it, and execute the corresponding command
