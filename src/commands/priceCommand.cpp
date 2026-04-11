@@ -174,6 +174,8 @@ void PriceCommand::getMarketPrices(const json& responseJson) {
         std::string itemCity = item["city"];
         int marketPrice = item["sell_price_min"];
 
+        itemCity.erase(std::remove_if(itemCity.begin(), itemCity.end(), ::isspace), itemCity.end());
+
         for (auto& city : m_report.cities) {
             if (city.cityName != itemCity) {
                 continue;
@@ -259,6 +261,8 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     // Fetch the recipe ingredients for the specified item ID from the database
     // Store them in a vector for later use
     std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(m_report.craftedItemId);
+    itemDb.getRecipeIngredientNames(ingredients);
+    
     for (auto& city : m_report.cities) {
         city.localIngredients = ingredients;
     }

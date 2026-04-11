@@ -67,3 +67,32 @@ std::vector<RecipeIngredient> ItemDatabase::getRecipeIngredients(const std::stri
     
     return ingredients;
 }
+
+std::vector<std::string> ItemDatabase::getRecipeIngredientNames(std::vector<RecipeIngredient>& ingredients) {
+    std::vector<std::string> ingredientNames;
+
+    if (!m_db) return ingredientNames; // Return empty vector if database connection is not available
+    
+    sqlite3_stmt* stmt;
+
+    // Prepare the SQL query to retrieve the display name for a given item ID
+    const char* query = "SELECT display_name FROM Items WHERE internal_id = ?";
+    if (sqlite3_prepare_v2(m_db, query, -1, &stmt, nullptr) == SQLITE_OK) {
+        // Iterate through each ingredient and fetch its display name
+        for (auto& ingredient : ingredients) {
+            sqlite3_bind_text(stmt, 1, ingredient.materialItemId.c_str(), -1, SQLITE_TRANSIENT);
+
+            // Execute the query and retrieve the display name if found
+            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                ingredient.materialItemName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+                ingredientNames.push_back(ingredient.materialItemName);
+            }
+            
+            // Reset the statement for the next iteration
+            sqlite3_reset(stmt);
+        }
+    }
+    sqlite3_finalize(stmt);
+    
+    return ingredientNames;
+}
