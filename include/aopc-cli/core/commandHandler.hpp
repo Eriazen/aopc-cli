@@ -4,6 +4,7 @@
 #include <memory>
 #include <functional>
 #include "aopc-cli/core/command.hpp"
+#include "isocline.h"
 
 
 // Command handler class
@@ -12,8 +13,13 @@ class CommandHandler {
         CommandHandler() { initializeCommands(); };
         void run();
 
+        static void isoclineCompleter(ic_completion_env_t* cenv, const char* input);
+
     private:
         std::unordered_map<std::string, std::function<std::unique_ptr<Command>()>> m_commands;
 
         void initializeCommands();
+
+        static void isoclineWordCompleter(ic_completion_env_t* cenv, const char* word);
+        void handleCompletion(ic_completion_env_t* cenv, const std::string& word);
 };

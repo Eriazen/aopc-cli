@@ -18,6 +18,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(json)
 
+FetchContent_Declare(
+    isocline
+    GIT_REPOSITORY https://github.com/daanx/isocline.git
+    GIT_TAG        v1.0.9
+)
+
+FetchContent_MakeAvailable(isocline)
+
 find_package(SQLite3 REQUIRED)
 find_package(CURL REQUIRED HTTPS)
 
@@ -53,4 +61,4 @@ add_custom_command(TARGET aopc-cli POST_BUILD
     COMMENT "Copying config folder to build directory"
 )
 
-target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3 CURL::libcurl)
+target_link_libraries(aopc-cli PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3 CURL::libcurl isocline)

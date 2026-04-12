@@ -16,13 +16,37 @@ void CommandHandler::initializeCommands() {
     m_commands["config"] = []() { return std::make_unique<ConfigCommand>(); };
 }
 
+void CommandHandler::isoclineCompleter(ic_completion_env_t* cenv, const char* input) {
+    ic_complete_word(cenv, input, &CommandHandler::isoclineWordCompleter, nullptr);
+}
+
+void CommandHandler::isoclineWordCompleter(ic_completion_env_t* cenv, const char* word) {
+    void* arg = ic_completion_arg(cenv);
+    if (arg == nullptr) return;
+
+    CommandHandler* self = static_cast<CommandHandler*>(arg);
+    self->handleCompletion(cenv, std::string(word));
+}
+
+void CommandHandler::handleCompletion(ic_completion_env_t* cenv, const std::string& word) {
+    for (const auto& [cmd_name, cmd_logic] : m_commands) {
+        if (cmd_name.find(word) == 0) {
+            ic_add_completion(cenv, cmd_name.c_str());
+        }
+    }
+}
+
 // Main loop to continuously read user input, parse it, and execute the corresponding command
 void CommandHandler::run() {
+    ic_style_def("prompt_style", "ansi_blue");
+    ic_set_default_completer(&CommandHandler::isoclineCompleter, this);
+
     while (true) {
-        std::string userInput;
         // Prompt user for input to execute a command
-        std::cout << "> ";
-        std::getline(std::cin, userInput);
+        char* rawInput;
+        rawInput = ic_readline("[prompt-style] ");
+        std::string userInput(rawInput);
+        free(rawInput);
 
         // Skip empty input, prompting the user again
         if (userInput.empty()) continue;
