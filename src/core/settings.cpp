@@ -12,13 +12,8 @@ Settings& Settings::getInstance() {
     return instance;
 }
 
-bool Settings::setConfigPath(const std::filesystem::path& path) {
-    if (std::filesystem::exists(path) && path.extension() == ".json") {
-        m_configPath = path.string();
-        return true;
-    }
-
-    return false;
+void Settings::setConfigPath(const std::filesystem::path& path) {
+    m_configPath = path.string();
 }
 
 // Set the database path, ensuring it exists and has the correct extension
@@ -114,7 +109,7 @@ bool Settings::saveSettingsToFile() const {
     // Open settings file, overwriting existing settings
     std::ofstream file(m_configPath, std::ios::trunc);
     if (!file.is_open()) {
-        std::cerr << "Error: Couldn't create setting file at '" << m_configPath << "'." << std::endl;
+        std::cerr << "Error: Couldn't create settings file at '" << m_configPath << "'." << std::endl;
         return false;
     }
 

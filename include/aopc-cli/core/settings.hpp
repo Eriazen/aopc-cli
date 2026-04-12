@@ -19,7 +19,7 @@ class Settings {
         float getResourceReturnRate() const { return m_resourceReturnRate; };
         int getStationFee() const { return m_stationFee; };
 
-        bool setConfigPath(const std::filesystem::path& path);
+        void setConfigPath(const std::filesystem::path& path);
         bool setDatabasePath(const std::filesystem::path& path);
         bool setRegionURL(const std::string& keyword);
         bool setMarketTax(const float& taxFraction);
