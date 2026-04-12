@@ -37,9 +37,11 @@ struct PriceReport {
     std::vector<City> cities;
 };
 
-class PriceCommand : public Command {
+class PriceCommand : public ICommand {
     public:
+        std::unique_ptr<ICommand> create() const override { return std::make_unique<PriceCommand>(); };
         void execute(const std::vector<std::string>& args) override;
+        void complete(ic_completion_env_t* cenv, const std::string& word, const std::string& line) override;
 
     private:
         PriceReport m_report;

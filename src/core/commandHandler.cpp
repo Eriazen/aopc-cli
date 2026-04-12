@@ -1,5 +1,5 @@
 #include "aopc-cli/core/commandHandler.hpp"
-#include<iostream>
+#include <iostream>
 #include <sstream>
 #include "aopc-cli/commands/helpCommand.hpp"
 #include "aopc-cli/commands/exitCommand.hpp"
@@ -8,21 +8,60 @@
 #include "aopc-cli/commands/configCommand.hpp"
 
 
-// Initialize the command map with available commands, associating command names with their respective command objects
-void CommandHandler::initializeCommands() {
-    m_commands["help"] = []() { return std::make_unique<HelpCommand>(); };
-    m_commands["exit"] = []() { return std::make_unique<ExitCommand>(); };
-    m_commands["price"] = []() { return std::make_unique<PriceCommand>(); };
-    m_commands["config"] = []() { return std::make_unique<ConfigCommand>(); };
+CommandHandler::CommandHandler() {
+    m_blueprints["help"] = std::make_unique<HelpCommand>();
+    m_blueprints["exit"] = std::make_unique<ExitCommand>();
+    m_blueprints["price"] = std::make_unique<PriceCommand>();
+    m_blueprints["setconfig"] = std::make_unique<ConfigCommand>();
+}
+
+void CommandHandler::isoclineCompleter(ic_completion_env_t* cenv, const char* input) {
+    void* arg = ic_completion_arg(cenv);
+    if (arg != nullptr) {
+        CommandHandler* self = static_cast<CommandHandler*>(arg);
+        self->m_lineContext = input;
+    }
+    ic_complete_word(cenv, input, &CommandHandler::isoclineWordCompleter, nullptr);
+}
+
+void CommandHandler::isoclineWordCompleter(ic_completion_env_t* cenv, const char* word) {
+    void* arg = ic_completion_arg(cenv);
+    if (arg == nullptr) return;
+
+    CommandHandler* self = static_cast<CommandHandler*>(arg);
+    self->handleCompletion(cenv, std::string(word));
+}
+
+void CommandHandler::handleCompletion(ic_completion_env_t* cenv, const std::string& word) {
+    if (m_lineContext.find(' ') == std::string::npos) {
+
+        for (const auto& [cmd_name, _] : m_blueprints) {
+            if (cmd_name.find(word) == 0) {
+                ic_add_completion(cenv, cmd_name.c_str());
+            }
+        }
+        return;
+    }
+
+    std::string targetCmd = m_lineContext.substr(0, m_lineContext.find(' '));
+
+    auto it = m_blueprints.find(targetCmd);
+    if (it != m_blueprints.end()) {
+        it->second->complete(cenv, word, m_lineContext);
+    }
 }
 
 // Main loop to continuously read user input, parse it, and execute the corresponding command
 void CommandHandler::run() {
+    ic_style_def("prompt_style", "ansi_blue");
+    ic_set_default_completer(&CommandHandler::isoclineCompleter, this);
+
     while (true) {
-        std::string userInput;
         // Prompt user for input to execute a command
-        std::cout << "> ";
-        std::getline(std::cin, userInput);
+        char* rawInput;
+        rawInput = ic_readline("[prompt-style] ");
+        std::string userInput(rawInput);
+        free(rawInput);
 
         // Skip empty input, prompting the user again
         if (userInput.empty()) continue;
@@ -43,9 +82,9 @@ void CommandHandler::run() {
 
         // Find the command in the command map and execute it with the provided arguments.
         // If the command is not found, execute the "invalid" command to handle unrecognized commands.
-        auto it = m_commands.find(commandName);
-        if (it != m_commands.end()) {
-            std::unique_ptr<Command> newCommandInstance = it->second();
+        auto it = m_blueprints.find(commandName);
+        if (it != m_blueprints.end()) {
+            std::unique_ptr<ICommand> newCommandInstance = it->second->create();
             newCommandInstance->execute(args);
         } else {
             std::make_unique<InvalidCommand>()->execute({});

@@ -2,8 +2,39 @@
 #include "aopc-cli/io/argParser.hpp"
 #include "aopc-cli/core/constants.hpp"
 #include "aopc-cli/io/formatter.hpp"
-#include<iostream>
+#include <iostream>
+#include <sstream>
 
+
+HelpCommand::HelpCommand() {
+    m_commands["price"] = [this]() { return printPriceHelp(); };
+    m_commands["setconfig"] = [this]() { return printConfigHelp(); };
+}
+
+void HelpCommand::complete(ic_completion_env_t* cenv, const std::string& word, const std::string& line) {
+    std::istringstream iss(line);
+    std::string token;
+
+    iss >> token; // Discard base command "help"
+
+    // Count tokens after "help"; stop early if we have 2+
+    int token_count = 0;
+    while (iss >> token && token_count < 2) {
+        ++token_count;
+    }
+
+    // No completions if we have 2+ arguments or 1 argument with empty word (already completed)
+    if (token_count > 1 || (token_count == 1 && word.empty())) {
+        return;
+    }
+
+    // Suggest completions for available commands
+    for (const auto& [cmd_name, _] : m_commands) {
+        if (cmd_name.find(word) == 0) {
+            ic_add_completion(cenv, cmd_name.c_str());
+        }
+    }
+}
 
 void HelpCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
@@ -15,10 +46,9 @@ void HelpCommand::execute(const std::vector<std::string>& args) {
 
     std::string target = args[0];
 
-    if (target == "price") {
-        printPriceHelp();
-    } else if (target == "config") {
-        printConfigHelp();
+    auto it = m_commands.find(target);
+    if (it != m_commands.end()) {
+        it->second();
     } else {
         std::cout << "No detailed help available for '" << target << "'." << '\n';
         std::cout << "Type 'help' for a list of available commands." << '\n';
@@ -36,7 +66,7 @@ USAGE:
 
 COMMANDS:
     price       Check the market price and calculate profit for crafting an item.
-    config      Manage application settings and preferences.
+    setconfig   Manage application settings and preferences.
     help        Show this help message.
     exit        Close the application.
 
@@ -75,11 +105,11 @@ EXAMPLES:
 
 void HelpCommand::printConfigHelp() const {
     std::cout << R"(
---- Help: config ---
+--- Help: setconfig ---
 Manage application settings and preferences.
 
 USAGE:
-    > config set <setting_name> <value>
+    > setconfig <setting_name> <value>
 
 SETTINGS:
     database_path    (string) The path to the local item database file.
@@ -100,7 +130,7 @@ SETTINGS:
                               [Default: 500]
 
 EXAMPLES:
-    > config set market_tax 0.08
-    > config set region europe
+    > setconfig market_tax 0.08
+    > setconfig region europe
 )";
 }

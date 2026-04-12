@@ -96,3 +96,26 @@ std::vector<std::string> ItemDatabase::getRecipeIngredientNames(std::vector<Reci
     
     return ingredientNames;
 }
+
+std::vector<std::string> ItemDatabase::getItemNameMatches(const std::string& name) {
+    std::vector<std::string> matches;
+
+    if (!m_db || name.empty()) return matches;
+
+    sqlite3_stmt* stmt;
+
+    const char* query = "SELECT display_name FROM Items WHERE display_name LIKE ? COLLATE NOCASE ORDER BY display_name ASC LIMIT 20";
+
+    if (sqlite3_prepare_v2(m_db, query, -1, &stmt, nullptr) == SQLITE_OK) {
+        std::string searchPattern = name + "%";
+        sqlite3_bind_text(stmt, 1, searchPattern.c_str(), -1, SQLITE_TRANSIENT);
+
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            std::string matchName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            matches.push_back(matchName);
+        }
+    }
+    sqlite3_finalize(stmt);
+
+    return matches;
+}

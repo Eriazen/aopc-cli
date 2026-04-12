@@ -27,6 +27,7 @@ class ItemDatabase {
 
         std::vector<RecipeIngredient> getRecipeIngredients(const std::string& craftedItemId);
         std::vector<std::string> getRecipeIngredientNames(std::vector<RecipeIngredient>& ingredients);
+        std::vector<std::string> getItemNameMatches(const std::string& name);
 
     private:
         sqlite3* m_db;

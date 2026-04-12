@@ -11,6 +11,7 @@ int main(int, char** argv){
     std::filesystem::path exeDir = std::filesystem::absolute(argv[0]).parent_path();
     std::filesystem::path dbPath = exeDir / "database" / "aopc_items.db";
     std::filesystem::path configPath = exeDir / "config" / "general.json";
+    std::filesystem::path historyPath = exeDir / "history.txt";
 
     settings.setConfigPath(configPath);
 
@@ -24,6 +25,8 @@ int main(int, char** argv){
         // Save default settings to file
         settings.saveSettingsToFile();
     }
+
+    ic_set_history(historyPath.string().c_str(), 200);
 
     // Print welcome message
     std::cout << "Albion Online Profit Calculator CLI tool started!" << std::endl;

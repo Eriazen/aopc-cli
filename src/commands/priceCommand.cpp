@@ -277,6 +277,84 @@ void PriceCommand::printPriceReport() {
     std::cout << std::defaultfloat;
 }
 
+void PriceCommand::complete(ic_completion_env_t* cenv, const std::string& word, const std::string& line) {
+    std::istringstream iss(line);
+    std::string token;
+    std::string activeFlag;
+    std::vector<std::string> itemTokens;
+
+    iss >> token; // Discard base command "price" 
+
+    while (iss >> token) {
+        if (token.find("--") == 0) {
+            activeFlag = token;
+            itemTokens.clear();  // Clear item tokens once we hit a flag
+        } else if (activeFlag.empty()) {
+            itemTokens.push_back(token);
+        }
+    }
+
+    if (word.find('-') == 0) {
+        std::vector<std::string> flags = {"--cities", "--qualities"};
+        for (const auto& flag : flags) {
+            if (flag.find(word) == 0) ic_add_completion(cenv, flag.c_str());
+        }
+
+        return;
+    }
+
+    if (activeFlag == "--cities") {
+        for (const auto& city : constants::CITIES) {
+            if (city.find(word) == 0) ic_add_completion(cenv, std::string(city).c_str());
+        }
+
+        return;
+    }
+
+    if (activeFlag == "--qualities") {
+        for (const auto& q : constants::ITEM_QUALITIES) {
+            if (q.find(word) == 0) ic_add_completion(cenv, std::string(q).c_str());
+        }
+
+        return;
+    }
+
+    if (activeFlag.empty()) {
+        // Don't try to complete empty words (user just typed a space)
+        if (word.empty()) {
+            return;
+        }
+
+        ItemDatabase itemDb(m_settings.getDatabasePath().string());
+        
+        std::string searchTerm;
+        
+        // Build search term: all previous complete tokens plus the current partial word
+        for (size_t i = 0; i < itemTokens.size(); ++i) {
+            if (!searchTerm.empty()) searchTerm += " ";
+            searchTerm += itemTokens[i];
+        }
+        
+        std::vector<std::string> nameMatches = itemDb.getItemNameMatches(searchTerm);
+        for (const auto& match : nameMatches) {
+            // Only suggest if the match is longer than what's already typed
+            if (match.find(searchTerm) == 0 && match.length() > searchTerm.length()) {
+                // Validate that the item actually exists in the database with a valid ID
+                ItemInfo itemInfo = itemDb.getItemInfoByDisplayName(match);
+                if (!itemInfo.itemId.empty()) {
+                    // Calculate how much of the search term belongs to previously completed words.
+                    size_t previousTokensLength = searchTerm.length() - word.length();
+                    
+                    // Extract the remainder of the match starting from the current word
+                    std::string completionStr = match.substr(previousTokensLength);
+                    
+                    ic_add_completion(cenv, completionStr.c_str());
+                }
+            }
+        }
+    }
+}
+
 // Execute the price command, fetching item information and validating cities and qualities
 void PriceCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
