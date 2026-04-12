@@ -46,10 +46,9 @@ void HelpCommand::execute(const std::vector<std::string>& args) {
 
     std::string target = args[0];
 
-    if (target == "price") {
-        printPriceHelp();
-    } else if (target == "config") {
-        printConfigHelp();
+    auto it = m_commands.find(target);
+    if (it != m_commands.end()) {
+        it->second();
     } else {
         std::cout << "No detailed help available for '" << target << "'." << '\n';
         std::cout << "Type 'help' for a list of available commands." << '\n';
