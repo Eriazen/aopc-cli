@@ -3,7 +3,7 @@
 #include "aopc-cli/core/command.hpp"
 
 
-class HelpCommand : public Command {
+class HelpCommand : public ICommand {
     public:
         void execute(const std::vector<std::string>& args) override;
 

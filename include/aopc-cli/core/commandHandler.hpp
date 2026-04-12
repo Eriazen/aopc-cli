@@ -16,7 +16,7 @@ class CommandHandler {
         static void isoclineCompleter(ic_completion_env_t* cenv, const char* input);
 
     private:
-        std::unordered_map<std::string, std::function<std::unique_ptr<Command>()>> m_commands;
+        std::unordered_map<std::string, std::function<std::unique_ptr<ICommand>()>> m_commands;
 
         void initializeCommands();
 

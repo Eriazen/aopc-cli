@@ -69,7 +69,7 @@ void CommandHandler::run() {
         // If the command is not found, execute the "invalid" command to handle unrecognized commands.
         auto it = m_commands.find(commandName);
         if (it != m_commands.end()) {
-            std::unique_ptr<Command> newCommandInstance = it->second();
+            std::unique_ptr<ICommand> newCommandInstance = it->second();
             newCommandInstance->execute(args);
         } else {
             std::make_unique<InvalidCommand>()->execute({});

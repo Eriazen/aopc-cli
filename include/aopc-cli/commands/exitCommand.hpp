@@ -3,7 +3,7 @@
 #include "aopc-cli/core/command.hpp"
 
 
-class ExitCommand : public Command {
+class ExitCommand : public ICommand {
     public:
         void execute(const std::vector<std::string>& args) override;
 };

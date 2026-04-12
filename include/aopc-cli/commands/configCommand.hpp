@@ -5,7 +5,7 @@
 #include <functional>
 
 
-class ConfigCommand : public Command {
+class ConfigCommand : public ICommand {
     public:
         ConfigCommand();
 

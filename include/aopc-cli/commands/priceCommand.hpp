@@ -37,7 +37,7 @@ struct PriceReport {
     std::vector<City> cities;
 };
 
-class PriceCommand : public Command {
+class PriceCommand : public ICommand {
     public:
         void execute(const std::vector<std::string>& args) override;
 
