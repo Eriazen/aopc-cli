@@ -5,7 +5,7 @@
 
 
 // Base command class
-class Command {
+class ICommand {
     public:
         virtual ~ICommand() = default;
 
