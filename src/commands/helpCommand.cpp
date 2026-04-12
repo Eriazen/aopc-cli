@@ -8,7 +8,7 @@
 
 HelpCommand::HelpCommand() {
     m_commands["price"] = [this]() { return printPriceHelp(); };
-    m_commands["config"] = [this]() { return printConfigHelp(); };
+    m_commands["setconfig"] = [this]() { return printConfigHelp(); };
 }
 
 void HelpCommand::complete(ic_completion_env_t* cenv, const std::string& word, const std::string& line) {
@@ -66,7 +66,7 @@ USAGE:
 
 COMMANDS:
     price       Check the market price and calculate profit for crafting an item.
-    config      Manage application settings and preferences.
+    setconfig   Manage application settings and preferences.
     help        Show this help message.
     exit        Close the application.
 
@@ -105,11 +105,11 @@ EXAMPLES:
 
 void HelpCommand::printConfigHelp() const {
     std::cout << R"(
---- Help: config ---
+--- Help: setconfig ---
 Manage application settings and preferences.
 
 USAGE:
-    > config set <setting_name> <value>
+    > setconfig <setting_name> <value>
 
 SETTINGS:
     database_path    (string) The path to the local item database file.
@@ -130,7 +130,7 @@ SETTINGS:
                               [Default: 500]
 
 EXAMPLES:
-    > config set market_tax 0.08
-    > config set region europe
+    > setconfig market_tax 0.08
+    > setconfig region europe
 )";
 }

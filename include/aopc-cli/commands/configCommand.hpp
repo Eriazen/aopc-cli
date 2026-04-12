@@ -11,6 +11,7 @@ class ConfigCommand : public ICommand {
 
         std::unique_ptr<ICommand> create() const override { return std::make_unique<ConfigCommand>(); };
         void execute(const std::vector<std::string>& args) override;
+        void complete(ic_completion_env_t* cenv, const std::string& word, const std::string& line);
 
     private:
         std::unordered_map<std::string, std::function<void(const std::string&)>> m_setters;

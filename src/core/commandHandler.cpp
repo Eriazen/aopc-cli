@@ -12,7 +12,7 @@ CommandHandler::CommandHandler() {
     m_blueprints["help"] = std::make_unique<HelpCommand>();
     m_blueprints["exit"] = std::make_unique<ExitCommand>();
     m_blueprints["price"] = std::make_unique<PriceCommand>();
-    m_blueprints["config"] = std::make_unique<ConfigCommand>();
+    m_blueprints["setconfig"] = std::make_unique<ConfigCommand>();
 }
 
 void CommandHandler::isoclineCompleter(ic_completion_env_t* cenv, const char* input) {
