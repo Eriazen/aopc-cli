@@ -2,8 +2,39 @@
 #include "aopc-cli/io/argParser.hpp"
 #include "aopc-cli/core/constants.hpp"
 #include "aopc-cli/io/formatter.hpp"
-#include<iostream>
+#include <iostream>
+#include <sstream>
 
+
+HelpCommand::HelpCommand() {
+    m_commands["price"] = [this]() { return printPriceHelp(); };
+    m_commands["config"] = [this]() { return printConfigHelp(); };
+}
+
+void HelpCommand::complete(ic_completion_env_t* cenv, const std::string& word, const std::string& line) {
+    std::istringstream iss(line);
+    std::string token;
+
+    iss >> token; // Discard base command "help"
+
+    // Count tokens after "help"; stop early if we have 2+
+    int token_count = 0;
+    while (iss >> token && token_count < 2) {
+        ++token_count;
+    }
+
+    // No completions if we have 2+ arguments or 1 argument with empty word (already completed)
+    if (token_count > 1 || (token_count == 1 && word.empty())) {
+        return;
+    }
+
+    // Suggest completions for available commands
+    for (const auto& [cmd_name, _] : m_commands) {
+        if (cmd_name.find(word) == 0) {
+            ic_add_completion(cenv, cmd_name.c_str());
+        }
+    }
+}
 
 void HelpCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);

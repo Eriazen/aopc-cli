@@ -1,5 +1,5 @@
 #include "aopc-cli/core/commandHandler.hpp"
-#include<iostream>
+#include <iostream>
 #include <sstream>
 #include "aopc-cli/commands/helpCommand.hpp"
 #include "aopc-cli/commands/exitCommand.hpp"
@@ -16,6 +16,11 @@ CommandHandler::CommandHandler() {
 }
 
 void CommandHandler::isoclineCompleter(ic_completion_env_t* cenv, const char* input) {
+    void* arg = ic_completion_arg(cenv);
+    if (arg != nullptr) {
+        CommandHandler* self = static_cast<CommandHandler*>(arg);
+        self->m_lineContext = input;
+    }
     ic_complete_word(cenv, input, &CommandHandler::isoclineWordCompleter, nullptr);
 }
 
@@ -28,10 +33,21 @@ void CommandHandler::isoclineWordCompleter(ic_completion_env_t* cenv, const char
 }
 
 void CommandHandler::handleCompletion(ic_completion_env_t* cenv, const std::string& word) {
-    for (const auto& [cmd_name, cmd_logic] : m_commands) {
-        if (cmd_name.find(word) == 0) {
-            ic_add_completion(cenv, cmd_name.c_str());
+    if (m_lineContext.find(' ') == std::string::npos) {
+
+        for (const auto& [cmd_name, _] : m_blueprints) {
+            if (cmd_name.find(word) == 0) {
+                ic_add_completion(cenv, cmd_name.c_str());
+            }
         }
+        return;
+    }
+
+    std::string targetCmd = m_lineContext.substr(0, m_lineContext.find(' '));
+
+    auto it = m_blueprints.find(targetCmd);
+    if (it != m_blueprints.end()) {
+        it->second->complete(cenv, word, m_lineContext);
     }
 }
 
