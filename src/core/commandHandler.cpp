@@ -8,12 +8,11 @@
 #include "aopc-cli/commands/configCommand.hpp"
 
 
-// Initialize the command map with available commands, associating command names with their respective command objects
-void CommandHandler::initializeCommands() {
-    m_commands["help"] = []() { return std::make_unique<HelpCommand>(); };
-    m_commands["exit"] = []() { return std::make_unique<ExitCommand>(); };
-    m_commands["price"] = []() { return std::make_unique<PriceCommand>(); };
-    m_commands["config"] = []() { return std::make_unique<ConfigCommand>(); };
+CommandHandler::CommandHandler() {
+    m_blueprints["help"] = std::make_unique<HelpCommand>();
+    m_blueprints["exit"] = std::make_unique<ExitCommand>();
+    m_blueprints["price"] = std::make_unique<PriceCommand>();
+    m_blueprints["config"] = std::make_unique<ConfigCommand>();
 }
 
 void CommandHandler::isoclineCompleter(ic_completion_env_t* cenv, const char* input) {
@@ -67,9 +66,9 @@ void CommandHandler::run() {
 
         // Find the command in the command map and execute it with the provided arguments.
         // If the command is not found, execute the "invalid" command to handle unrecognized commands.
-        auto it = m_commands.find(commandName);
-        if (it != m_commands.end()) {
-            std::unique_ptr<ICommand> newCommandInstance = it->second();
+        auto it = m_blueprints.find(commandName);
+        if (it != m_blueprints.end()) {
+            std::unique_ptr<ICommand> newCommandInstance = it->second->create();
             newCommandInstance->execute(args);
         } else {
             std::make_unique<InvalidCommand>()->execute({});

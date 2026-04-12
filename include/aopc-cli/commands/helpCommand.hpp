@@ -5,6 +5,7 @@
 
 class HelpCommand : public ICommand {
     public:
+        std::unique_ptr<ICommand> create() const override { return std::make_unique<HelpCommand>(); };
         void execute(const std::vector<std::string>& args) override;
 
     private:

@@ -10,15 +10,13 @@
 // Command handler class
 class CommandHandler {
     public:
-        CommandHandler() { initializeCommands(); };
+        CommandHandler();
         void run();
 
         static void isoclineCompleter(ic_completion_env_t* cenv, const char* input);
 
     private:
-        std::unordered_map<std::string, std::function<std::unique_ptr<ICommand>()>> m_commands;
-
-        void initializeCommands();
+        std::unordered_map<std::string, std::unique_ptr<ICommand>> m_blueprints;
 
         static void isoclineWordCompleter(ic_completion_env_t* cenv, const char* word);
         void handleCompletion(ic_completion_env_t* cenv, const std::string& word);

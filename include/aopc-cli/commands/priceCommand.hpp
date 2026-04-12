@@ -39,6 +39,7 @@ struct PriceReport {
 
 class PriceCommand : public ICommand {
     public:
+        std::unique_ptr<ICommand> create() const override { return std::make_unique<PriceCommand>(); };
         void execute(const std::vector<std::string>& args) override;
 
     private:
