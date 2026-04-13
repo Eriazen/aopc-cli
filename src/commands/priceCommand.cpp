@@ -278,15 +278,17 @@ void PriceCommand::printPriceReport() {
     std::cout << "REPORT: " << m_report.craftedItemName << '\n';
     std::cout << std::string(constants::TOTAL_LINE_WIDTH, '=') << '\n' << '\n';
 
-    std::cout << "[ Crafting Parameters ]" << '\n';
+    std::cout << "[ Global Parameters ]" << '\n';
         std::cout << "  "
             << std::left << std::setw(12) << "Tax Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedTaxRate * 100, 1)
             << std::setw(12) << "Return Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedRrr * 100, 1) << '\n';
         if (!m_report.materialSources.empty()) {
             std::cout << "  "
                 << std::left << std::setw(12) << "Silver Cost" << ": " << std::setw(31) << TextFormatter::formatCurrency(m_report.silverCost, "s")
-                << std::setw(12) << "Focus Cost" << ": " << TextFormatter::formatNumber(m_report.craftingFocus) << '\n' << '\n';
+                << std::setw(12) << "Focus Cost" << ": " << TextFormatter::formatNumber(m_report.craftingFocus) << '\n';
         }
+    
+    std::cout << '\n';
 
     std::vector<std::string> uniqueDestCities;
     for (const auto& market : m_report.sellMarkets) {
