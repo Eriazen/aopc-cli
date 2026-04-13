@@ -11,7 +11,8 @@
 
 // Get the list of cities from the command arguments, validating against known cities
 bool PriceCommand::getSell(ArgParser& parser) {
-    std::vector<std::string> sellCities;
+    std::unordered_set<std::string> sellCities;
+
     if (parser.commandFlagExists("--sell")) {
         std::vector<std::string> requestedCities = parser.getCommandFlagValues("--sell");
 
@@ -25,12 +26,14 @@ bool PriceCommand::getSell(ArgParser& parser) {
                 return false;
             }
 
-            sellCities.push_back(city);
+            if (sellCities.count(city) == 0) {
+                sellCities.insert(city);
+            }
         }
     } else {
         // If no cities are specified, default to all cities
         for (const auto& city : constants::CITIES) {
-            sellCities.push_back(std::string(city));
+            sellCities.insert(std::string(city));
         }
     }
 
@@ -49,6 +52,8 @@ bool PriceCommand::getSell(ArgParser& parser) {
 
 // Get the list of qualities from the command arguments, validating against known qualities
 bool PriceCommand::getBuy(ArgParser& parser) {
+    std::unordered_set<std::string> buyCities;
+
     if (parser.commandFlagExists("--buy")) {
         std::vector<std::string> requestedCities = parser.getCommandFlagValues("--buy");
 
@@ -62,11 +67,17 @@ bool PriceCommand::getBuy(ArgParser& parser) {
                 return false;
             }
 
-            MarketData::MaterialSourceData cityBuyData;
-            cityBuyData.cityName = city;
-            m_report.materialSources.push_back(cityBuyData);
+            if (buyCities.count(city) == 0) {
+                buyCities.insert(city);
             }
         }
+    }
+    
+    for (const auto& city : buyCities) {
+        MarketData::MaterialSourceData cityBuyData;
+        cityBuyData.cityName = city;
+        m_report.materialSources.push_back(cityBuyData);
+    }
 
     return true;
 }
@@ -379,6 +390,7 @@ void PriceCommand::complete(ic_completion_env_t* cenv, const std::string& word, 
     std::string token;
     std::string activeFlag;
     std::vector<std::string> itemTokens;
+    std::vector<std::string> activeFlagArgs;
 
     iss >> token; // Discard base command "price" 
 
@@ -386,15 +398,20 @@ void PriceCommand::complete(ic_completion_env_t* cenv, const std::string& word, 
         if (token.find("--") == 0) {
             activeFlag = token;
             itemTokens.clear();  // Clear item tokens once we hit a flag
+            activeFlagArgs.clear();
         } else if (activeFlag.empty()) {
             itemTokens.push_back(token);
+        } else {
+            activeFlagArgs.push_back(token);
         }
     }
 
     if (word.find('-') == 0) {
         std::vector<std::string> flags = {"--buy", "--sell"};
         for (const auto& flag : flags) {
-            if (flag.find(word) == 0 && line.find(flag) == std::string::npos) ic_add_completion(cenv, flag.c_str());
+            if (flag.find(word) == 0 && line.find(flag) == std::string::npos) {
+                ic_add_completion(cenv, flag.c_str());
+            }
         }
 
         return;
@@ -402,7 +419,11 @@ void PriceCommand::complete(ic_completion_env_t* cenv, const std::string& word, 
 
     if (activeFlag == "--buy" || activeFlag == "--sell") {
         for (const auto& city : constants::CITIES) {
-            if (city.find(word) == 0) ic_add_completion(cenv, std::string(city).c_str());
+            if (city.find(word) == 0) {
+                if (std::find(activeFlagArgs.begin(), activeFlagArgs.end(), city) == activeFlagArgs.end()) {
+                    ic_add_completion(cenv, std::string(city).c_str());
+                }
+            }
         }
 
         return;
