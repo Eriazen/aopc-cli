@@ -4,6 +4,10 @@
 #include <vector>
 #include <iostream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 
 namespace TextFormatter {
     std::string formatNumber(int value);
@@ -32,4 +36,17 @@ namespace TextFormatter {
             currentLineLength += static_cast<int>(word.length());
         }
     }
+}
+
+inline void enableVirtualTerminal() {
+#ifdef _WIN32
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) return;
+
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode)) return;
+
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, dwMode);
+#endif
 }
