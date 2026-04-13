@@ -48,5 +48,7 @@ inline void enableVirtualTerminal() {
 
     dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     SetConsoleMode(hOut, dwMode);
+
+    system("color 07");
 #endif
 }
