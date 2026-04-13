@@ -18,7 +18,8 @@ namespace constants {
     // Albion Online values
     inline constexpr std::array<std::string_view, 8> CITIES { "Caerleon", "Lymhurst", "Bridgewatch", "Martlock", "Thetford", "FortSterling", "Brecilien", "BlackMarket" };
     //inline constexpr std::array<std::string_view, 5> ITEM_QUALITIES { "Normal", "Good", "Outstanding", "Excellent", "Masterpiece" };
-    inline constexpr std::array<std::string_view, 5> ITEM_QUALITIES { "1", "2", "3", "4", "5" };
+    //inline constexpr std::array<std::string_view, 5> ITEM_QUALITIES { "1", "2", "3", "4", "5" };
+    inline constexpr std::array<int, 5> ITEM_QUALITIES { 1, 2, 3, 4, 5 };
 
     // Output formatting
     inline constexpr unsigned int TOTAL_LINE_WIDTH { 100 };

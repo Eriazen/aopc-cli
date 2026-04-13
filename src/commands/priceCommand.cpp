@@ -2,6 +2,7 @@
 #include "aopc-cli/core/constants.hpp"
 #include "aopc-cli/io/apiManager.hpp"
 #include "aopc-cli/io/formatter.hpp"
+#include "aopc-cli/db/itemDatabase.hpp"
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -9,9 +10,11 @@
 
 
 // Get the list of cities from the command arguments, validating against known cities
-bool PriceCommand::getCities(ArgParser& parser) {
-    if (parser.commandFlagExists("--cities")) {
-        std::vector<std::string> requestedCities = parser.getCommandFlagValues("--cities");
+bool PriceCommand::getSell(ArgParser& parser) {
+    std::unordered_set<std::string> sellCities;
+
+    if (parser.commandFlagExists("--sell")) {
+        std::vector<std::string> requestedCities = parser.getCommandFlagValues("--sell");
 
         // Validate the specified cities, ensuring they are in the list of known cities
         for (const auto& city : requestedCities) {
@@ -23,58 +26,86 @@ bool PriceCommand::getCities(ArgParser& parser) {
                 return false;
             }
 
-            City cityData;
-            cityData.cityName = city;
-            m_report.cities.push_back(cityData);
+            if (sellCities.count(city) == 0) {
+                sellCities.insert(city);
+            }
         }
     } else {
         // If no cities are specified, default to all cities
         for (const auto& city : constants::CITIES) {
-            City cityData;
-            cityData.cityName = city;
-            m_report.cities.push_back(cityData);
+            sellCities.insert(std::string(city));
         }
     }
+
+    for (const auto& city : sellCities) {
+        for (const auto& quality : constants::ITEM_QUALITIES) {
+            MarketData::MarketSellData citySellData;
+            citySellData.cityName = city;
+            citySellData.qualityLevel = quality;
+            m_report.sellMarkets.push_back(citySellData);
+        }
+    }
+
 
     return true;
 }
 
 // Get the list of qualities from the command arguments, validating against known qualities
-bool PriceCommand::getQualities(ArgParser& parser) {
-    std::vector<std::string> validatedQualities;
+bool PriceCommand::getBuy(ArgParser& parser) {
+    std::unordered_set<std::string> buyCities;
 
-    if (parser.commandFlagExists("--quality")) {
-        std::vector<std::string> requestedQualities = parser.getCommandFlagValues("--quality");
+    if (parser.commandFlagExists("--buy")) {
+        std::vector<std::string> requestedCities = parser.getCommandFlagValues("--buy");
 
-        // Validate the specified qualities, ensuring they are in the list of known qualities
-        for (const auto& quality : requestedQualities) {
-            if (std::find(constants::ITEM_QUALITIES.begin(), constants::ITEM_QUALITIES.end(), quality) == constants::ITEM_QUALITIES.end()) {
-                // If an invalid quality is found, print an error message and return false
-                std::cout << "Error: Invalid quality '" << quality << "'. Valid qualities are: ";
-                for (const auto& validQuality : constants::ITEM_QUALITIES) std::cout << validQuality << " ";
+        // Validate the specified cities, ensuring they are in the list of known cities
+        for (const auto& city : requestedCities) {
+            if (std::find(constants::CITIES.begin(), constants::CITIES.end(), city) == constants::CITIES.end()) {
+                // If an invalid city is found, print an error message and return false
+                std::cout << "Error: Invalid city '" << city << "'. Valid cities are: ";
+                for (const auto& validCity : constants::CITIES) std::cout << validCity << " ";
                 std::cout << std::endl;
                 return false;
             }
 
-            validatedQualities.push_back(quality);
-        }
-    } else {
-        // If no qualities are specified, default to all qualities
-        for (const auto& quality : constants::ITEM_QUALITIES) {
-            validatedQualities.push_back(std::string(quality));
+            if (buyCities.count(city) == 0) {
+                buyCities.insert(city);
+            }
         }
     }
-
-    for (auto& city : m_report.cities) {
-        for (const auto& quality : validatedQualities) {
-            Quality qualityResult;
-
-            qualityResult.qualityLevel = std::stoi(quality);
-            city.qualityProfit.push_back(qualityResult);
-        }
+    
+    for (const auto& city : buyCities) {
+        MarketData::MaterialSourceData cityBuyData;
+        cityBuyData.cityName = city;
+        m_report.materialSources.push_back(cityBuyData);
     }
 
     return true;
+}
+
+// Generate trade routes from available sources/destinations
+void PriceCommand::generateRoutes() {
+    m_report.calculatedRoutes.clear();
+
+    if (m_report.materialSources.empty()) {
+        for (const auto& dest : m_report.sellMarkets) {
+            MarketData::TradeRoute route;
+            route.destinationCity = dest.cityName;
+            route.qualityLevel = dest.qualityLevel;
+
+            m_report.calculatedRoutes.push_back(route);
+        }
+    } else {
+        for(const auto& source : m_report.materialSources) {
+            for (const auto& dest : m_report.sellMarkets) {
+                MarketData::TradeRoute route;
+                route.destinationCity = dest.cityName;
+                route.sourceCity = source.cityName;
+                route.qualityLevel = dest.qualityLevel;
+
+                m_report.calculatedRoutes.push_back(route);
+            }
+        }
+    }
 }
 
 // Build an API request url from provided information
@@ -85,26 +116,30 @@ std::string PriceCommand::apiURLBuilder() {
     url.append(std::string(constants::API_PRICE_ENDPOINT));
     url.append(m_report.craftedItemId);
 
-    for (const RecipeIngredient& ingredient : m_report.cities[0].localIngredients) {
-        url.append("," + ingredient.materialItemId);
+    if (!m_report.materialSources.empty()) {
+        for (const RecipeIngredient& ingredient : m_report.materialSources[0].localIngredients) {
+            url.append("," + ingredient.materialItemId);
+        }
     }
 
     url.append("?locations=");
 
-    for (const auto& city : m_report.cities) {
-        if (city.cityName != m_report.cities.front().cityName) {
-            url.append(",");
+    std::unordered_set<std::string> uniqueSellCities;
+    for (const auto& market : m_report.sellMarkets) {
+        if (uniqueSellCities.insert(market.cityName).second) {
+            if (uniqueSellCities.size() > 1) {
+                url.append(",");
+            }
+            url.append(market.cityName);
         }
-        url.append(city.cityName);
     }
 
-    url.append("&qualities=");
-    
-    for (const auto& quality : m_report.cities[0].qualityProfit) {
-        if (quality.qualityLevel != m_report.cities[0].qualityProfit.front().qualityLevel) {
-            url.append(",");
+    for (const auto& city : m_report.materialSources) {
+        if (url.find(city.cityName) != std::string::npos) {
+            continue;
         }
-        url.append(std::to_string(quality.qualityLevel));
+        url.append(",");
+        url.append(city.cityName);
     }
 
     return url;
@@ -112,9 +147,11 @@ std::string PriceCommand::apiURLBuilder() {
 
 // Response JSON may need clean up from materials with quality higher than 1
 void PriceCommand::jsonResponseCleanup(json& responseJson) {
+    if (m_report.materialSources.empty()) return;
+
     std::unordered_set<std::string> ingredientIds;
     // Get ingredient IDs to compare against json item IDs later
-    for (const auto& ing : m_report.cities[0].localIngredients) {
+    for (const auto& ing : m_report.materialSources[0].localIngredients) {
         ingredientIds.insert(ing.materialItemId);
     }
 
@@ -143,24 +180,20 @@ void PriceCommand::getMarketPrices(const json& responseJson) {
 
         itemCity.erase(std::remove_if(itemCity.begin(), itemCity.end(), ::isspace), itemCity.end());
 
-        for (auto& city : m_report.cities) {
-            if (city.cityName != itemCity) {
-                continue;
+        for (auto& cityMarket : m_report.sellMarkets) {
+            if (cityMarket.cityName == itemCity && cityMarket.qualityLevel == itemQuality) {
+                cityMarket.marketSellPrice = marketPrice;
+                break;
             }
-
-            for (auto& quality : city.qualityProfit) {
-                if (quality.qualityLevel == itemQuality) {
-                    quality.marketSellPrice = marketPrice;
-                    break;
-                }
-            }
-            break;
         }
     }
 
+    // Don't process ingredient prices if there aren't any
+    if (m_report.materialSources.empty()) return;
+
     // Build ingredient ID lookup set for fast filtering
     std::unordered_set<std::string> ingredientIds;
-    for (const auto& ing : m_report.cities[0].localIngredients) {
+    for (const auto& ing : m_report.materialSources[0].localIngredients) {
         ingredientIds.insert(ing.materialItemId);
     }
     
@@ -178,12 +211,12 @@ void PriceCommand::getMarketPrices(const json& responseJson) {
 
         itemCity.erase(std::remove_if(itemCity.begin(), itemCity.end(), ::isspace), itemCity.end());
 
-        for (auto& city : m_report.cities) {
-            if (city.cityName != itemCity) {
+        for (auto& source : m_report.materialSources) {
+            if (source.cityName != itemCity) {
                 continue;
             }
 
-            for (auto& ingredient : city.localIngredients) {
+            for (auto& ingredient : source.localIngredients) {
                 if (ingredient.materialItemId == itemId) {
                     ingredient.marketPrice = marketPrice;
                     break;
@@ -194,28 +227,47 @@ void PriceCommand::getMarketPrices(const json& responseJson) {
     }
 }
 
-void PriceCommand::calculateProfit() {
-    constexpr float SETUP_FEE = 0.025f;  // 2.5% setup fee
-
-    for (auto& city : m_report.cities) {
+void PriceCommand::calculateMaterialCost() {
+    for (auto& source : m_report.materialSources) {
         // Calculate total ingredient cost
-        int materialCost = 0;
-        for (const auto& ingredient : city.localIngredients) {
+        int materialCost { 0 };
+        for (const auto& ingredient : source.localIngredients) {
             materialCost += ingredient.marketPrice * ingredient.quantity;
         }
 
-        city.baseMaterialCost = materialCost;
-        
-        // Apply resource return rate discount
-        float rrr_factor = 1.0f - m_report.appliedRrr;
-        city.materialCostWithRrr = static_cast<int>(ceilf(static_cast<float>(materialCost) * rrr_factor));
+        source.baseMaterialCost = materialCost;
 
-        // Calculate profit for each quality tier
-        for (auto& quality : city.qualityProfit) {
-            float tax_base = static_cast<float>(quality.marketSellPrice) * (m_report.appliedTaxRate + SETUP_FEE);
-            quality.taxPaid = static_cast<int>(ceilf(tax_base));
-            quality.finalProfit = quality.marketSellPrice - quality.taxPaid - city.materialCostWithRrr - m_report.silverCost;
+        // Apply resource return rate discount
+        float rrrFactor = 1.0f - m_report.appliedRrr;
+        source.materialCostWithRrr = static_cast<int>(ceilf(static_cast<float>(materialCost) * rrrFactor));
+    }
+}
+
+void PriceCommand::calculateProfit() {
+    constexpr float SETUP_FEE = 0.025f;  // 2.5% setup fee
+
+    for (auto& market : m_report.sellMarkets) {
+        float taxBase = static_cast<float>(market.marketSellPrice) * (m_report.appliedTaxRate + SETUP_FEE);
+        market.taxPaid = static_cast<int>(ceilf(taxBase));
+    }
+
+    for (auto& route : m_report.calculatedRoutes) {
+        for (const auto& market : m_report.sellMarkets) {
+
+            if (route.destinationCity == market.cityName && route.qualityLevel == market.qualityLevel) {
+                route.totalRevenue = market.marketSellPrice - market.taxPaid;
+                break;
+            }
         }
+
+        for (const auto& source : m_report.materialSources) {
+            if (route.sourceCity == source.cityName) {
+                route.totalCost = source.materialCostWithRrr;
+                break;
+            }
+        }
+
+        route.finalProfit = route.totalRevenue - route.totalCost - m_report.silverCost;
     }
 }
 
@@ -230,48 +282,104 @@ void PriceCommand::printPriceReport() {
         std::cout << "  "
             << std::left << std::setw(12) << "Tax Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedTaxRate * 100, 1)
             << std::setw(12) << "Return Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedRrr * 100, 1) << '\n';
-
-        std::cout << "  "
-            << std::left << std::setw(12) << "Silver Cost" << ": " << std::setw(31) << TextFormatter::formatCurrency(m_report.silverCost, "s")
-            << std::setw(12) << "Focus Cost" << ": " << TextFormatter::formatNumber(m_report.craftingFocus) << '\n' << '\n';
-
-    for (const auto& city : m_report.cities) {
-        unsigned int remainingWidth = constants::TOTAL_LINE_WIDTH - (3 + static_cast<unsigned int>(city.cityName.length()) + 1);
-        std::cout << "-- " << city.cityName << " " << std::string(remainingWidth, '-') << '\n' << '\n';
-
-        std::cout << "[ Material Costs ]" << '\n';
-        std::cout << "  "
-            << std::left << std::setw(30) << "Material Name"
-            << std::right << std::setw(10) << "Qty"
-            << std::setw(25) << "Market Price"
-            << std::setw(25) << "Total Price" << '\n';
-        std::cout << "  " << std::string(90, '-') << '\n';
-
-        for (const auto& ingredient : city.localIngredients) {
+        if (!m_report.materialSources.empty()) {
             std::cout << "  "
-                << std::left << std::setw(30) << ingredient.materialItemName
-                << std::right << std::setw(10) << TextFormatter::formatNumber(ingredient.quantity)
-                << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice, "s")
-                << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice * ingredient.quantity, "s") << '\n';
+                << std::left << std::setw(12) << "Silver Cost" << ": " << std::setw(31) << TextFormatter::formatCurrency(m_report.silverCost, "s")
+                << std::setw(12) << "Focus Cost" << ": " << TextFormatter::formatNumber(m_report.craftingFocus) << '\n' << '\n';
         }
-        std::cout << "  " << std::string(90, '-') << '\n';
-        std::cout << std::right << std::setw(76) << "Total Base Cost (w/ RRR):" << std::setw(16) << TextFormatter::formatCurrency(city.materialCostWithRrr, "s") << '\n' << '\n';
 
-        std::cout << "[ Projected Profits ]" << '\n';
-        std::cout << "  "
-            << std::left << std::setw(20) << "Quality"
-            << std::right << std::setw(20) << "Market Price"
-            << std::setw(20) << "Profit" << '\n';
-        std::cout << "  " << std::string(60, '-') << '\n';
+    std::vector<std::string> uniqueDestCities;
+    for (const auto& market : m_report.sellMarkets) {
+        if (std::find(uniqueDestCities.begin(), uniqueDestCities.end(), market.cityName) == uniqueDestCities.end()) {
+            uniqueDestCities.push_back(market.cityName);
+        }
+    }
 
-        for (const auto& quality : city.qualityProfit) {
+    if (!m_report.materialSources.empty()) {
+        
+        // Crafting mode: source -> destination
+        for (const auto& source : m_report.materialSources) {
+            for (const auto& destCityName : uniqueDestCities) {
+                
+                std::string cityHeader { source.cityName + " --> " + destCityName };
+                
+                // Safe width calculation
+                unsigned int remainingWidth = 0;
+                if (constants::TOTAL_LINE_WIDTH > (3 + cityHeader.length() + 1)) {
+                    remainingWidth = constants::TOTAL_LINE_WIDTH - (3 + static_cast<unsigned int>(cityHeader.length()) + 1);
+                }
+                std::cout << "-- " << cityHeader << " " << std::string(remainingWidth, '-') << '\n' << '\n';
+
+                // Material Table
+                std::cout << "[ Material Costs ]" << '\n';
+                std::cout << "  "
+                    << std::left << std::setw(30) << "Material Name"
+                    << std::right << std::setw(10) << "Qty"
+                    << std::setw(25) << "Market Price"
+                    << std::setw(25) << "Total Price" << '\n';
+                std::cout << "  " << std::string(90, '-') << '\n';
+
+                for (const auto& ingredient : source.localIngredients) {
+                    std::cout << "  "
+                        << std::left << std::setw(30) << ingredient.materialItemName
+                        << std::right << std::setw(10) << TextFormatter::formatNumber(ingredient.quantity)
+                        << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice, "s")
+                        << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice * ingredient.quantity, "s") << '\n';
+                }
+                std::cout << "  " << std::string(90, '-') << '\n';
+                std::cout << std::right << std::setw(76) << "Total Base Cost (w/ RRR):" << std::setw(16) << TextFormatter::formatCurrency(source.materialCostWithRrr, "s") << '\n' << '\n';
+
+                // Profit Table
+                std::cout << "[ Projected Profits ]" << '\n';
+                std::cout << "  "
+                    << std::left << std::setw(20) << "Quality"
+                    << std::right << std::setw(20) << "Net Revenue"
+                    << std::setw(20) << "Profit" << '\n';
+                std::cout << "  " << std::string(60, '-') << '\n';
+
+                // Loop through calculated routes to find the exact permutations for this Source/Dest combo
+                for (const auto& route : m_report.calculatedRoutes) {
+                    if (route.sourceCity == source.cityName && route.destinationCity == destCityName) {
+                        std::cout << "  "
+                            << std::left << std::setw(20) << TextFormatter::formatNumber(route.qualityLevel)
+                            << std::right << std::setw(20) << TextFormatter::formatCurrency(route.totalRevenue, "s")
+                            << std::setw(20) << TextFormatter::formatCurrency(route.finalProfit, "s") << '\n';
+                    }
+                }
+                std::cout << "  " << std::string(60, '-') << '\n' << '\n';
+            }
+        }
+    } else {
+        
+        // Sell mode
+        for (const auto& destCityName : uniqueDestCities) {
+            
+            // Safe width calculation
+            unsigned int remainingWidth = 0;
+            if (constants::TOTAL_LINE_WIDTH > (3 + destCityName.length() + 1)) {
+                remainingWidth = constants::TOTAL_LINE_WIDTH - (3 + static_cast<unsigned int>(destCityName.length()) + 1);
+            }
+            std::cout << "-- " << destCityName << " " << std::string(remainingWidth, '-') << '\n' << '\n';
+
+            // Profit Table
+            std::cout << "[ Projected Profits ]" << '\n';
             std::cout << "  "
-                << std::left << std::setw(20) << TextFormatter::formatNumber(quality.qualityLevel)
-                << std::right << std::setw(20) << TextFormatter::formatCurrency(quality.marketSellPrice, "s")
-                << std::setw(20) << TextFormatter::formatCurrency(quality.finalProfit, "s") << '\n';
-        }
-        std::cout << "  " << std::string(60, '-') << '\n' << '\n';
+                << std::left << std::setw(20) << "Quality"
+                << std::right << std::setw(20) << "           "
+                << std::setw(20) << "Profit" << '\n';
+            std::cout << "  " << std::string(60, '-') << '\n';
 
+            // Filter routes for this specific destination
+            for (const auto& route : m_report.calculatedRoutes) {
+                if (route.destinationCity == destCityName) {
+                    std::cout << "  "
+                        << std::left << std::setw(20) << TextFormatter::formatNumber(route.qualityLevel)
+                        << std::right << std::setw(20) << std::string(TextFormatter::formatCurrency(route.totalRevenue, "s").length(), ' ')
+                        << std::setw(20) << TextFormatter::formatCurrency(route.finalProfit, "s") << '\n';
+                }
+            }
+            std::cout << "  " << std::string(60, '-') << '\n' << '\n';
+        }
     }
 
     std::cout << std::defaultfloat;
@@ -282,6 +390,7 @@ void PriceCommand::complete(ic_completion_env_t* cenv, const std::string& word, 
     std::string token;
     std::string activeFlag;
     std::vector<std::string> itemTokens;
+    std::vector<std::string> activeFlagArgs;
 
     iss >> token; // Discard base command "price" 
 
@@ -289,31 +398,32 @@ void PriceCommand::complete(ic_completion_env_t* cenv, const std::string& word, 
         if (token.find("--") == 0) {
             activeFlag = token;
             itemTokens.clear();  // Clear item tokens once we hit a flag
+            activeFlagArgs.clear();
         } else if (activeFlag.empty()) {
             itemTokens.push_back(token);
+        } else {
+            activeFlagArgs.push_back(token);
         }
     }
 
     if (word.find('-') == 0) {
-        std::vector<std::string> flags = {"--cities", "--qualities"};
+        std::vector<std::string> flags = {"--buy", "--sell"};
         for (const auto& flag : flags) {
-            if (flag.find(word) == 0) ic_add_completion(cenv, flag.c_str());
+            if (flag.find(word) == 0 && line.find(flag) == std::string::npos) {
+                ic_add_completion(cenv, flag.c_str());
+            }
         }
 
         return;
     }
 
-    if (activeFlag == "--cities") {
+    if (activeFlag == "--buy" || activeFlag == "--sell") {
         for (const auto& city : constants::CITIES) {
-            if (city.find(word) == 0) ic_add_completion(cenv, std::string(city).c_str());
-        }
-
-        return;
-    }
-
-    if (activeFlag == "--qualities") {
-        for (const auto& q : constants::ITEM_QUALITIES) {
-            if (q.find(word) == 0) ic_add_completion(cenv, std::string(q).c_str());
+            if (city.find(word) == 0) {
+                if (std::find(activeFlagArgs.begin(), activeFlagArgs.end(), city) == activeFlagArgs.end()) {
+                    ic_add_completion(cenv, std::string(city).c_str());
+                }
+            }
         }
 
         return;
@@ -391,18 +501,23 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     }
 
     // Invoke the helper function to get the list of cities from the command arguments, validating against known cities
-    if (!getCities(parser)) return;
+    if (!getSell(parser)) return;
 
     // Invoke the helper function to get the list of qualities from the command arguments, validating against known qualities
-    if (!getQualities(parser)) return;
+    if (!getBuy(parser)) return;
+
+    // Generate trade routes based on the sell and buy flags
+    generateRoutes();
 
     // Fetch the recipe ingredients for the specified item ID from the database
     // Store them in a vector for later use
-    std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(m_report.craftedItemId);
-    itemDb.getRecipeIngredientNames(ingredients);
-    
-    for (auto& city : m_report.cities) {
-        city.localIngredients = ingredients;
+    if (!m_report.materialSources.empty()) {
+        std::vector<RecipeIngredient> ingredients = itemDb.getRecipeIngredients(m_report.craftedItemId);
+        itemDb.getRecipeIngredientNames(ingredients);
+        
+        for (auto& source : m_report.materialSources) {
+            source.localIngredients = ingredients;
+        }
     }
 
     // Build API url from known data, appending ingredients, cities and qualities
@@ -420,6 +535,9 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     m_report.appliedTaxRate = m_settings.getMarketTax();
     m_report.appliedRrr = m_settings.getResourceReturnRate();
 
+    if (!m_report.materialSources.empty()) {
+        calculateMaterialCost();
+    }
     // Calculate profit margins for each quality tier
     calculateProfit();
 
