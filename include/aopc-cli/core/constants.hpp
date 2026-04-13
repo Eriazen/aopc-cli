@@ -1,5 +1,4 @@
-#ifndef CONSTANTS_HPP
-#define CONSTANTS_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -24,5 +23,3 @@ namespace constants {
     // Output formatting
     inline constexpr unsigned int TOTAL_LINE_WIDTH { 100 };
 }
-
-#endif // CONSTANTS_HPP
