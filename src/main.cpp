@@ -15,7 +15,7 @@ int main(int, char** argv){
     std::filesystem::path exeDir = std::filesystem::absolute(argv[0]).parent_path();
     std::filesystem::path dbPath = exeDir / "database" / "aopc_items.db";
     std::filesystem::path configPath = exeDir / "config" / "general.json";
-    std::filesystem::path historyPath = exeDir / "history.txt";
+    std::filesystem::path historyPath = exeDir / "command_history.txt";
 
     settings.setConfigPath(configPath);
 
