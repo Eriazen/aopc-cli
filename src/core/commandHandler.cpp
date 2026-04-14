@@ -53,13 +53,15 @@ void CommandHandler::handleCompletion(ic_completion_env_t* cenv, const std::stri
 
 // Main loop to continuously read user input, parse it, and execute the corresponding command
 void CommandHandler::run() {
-    ic_style_def("prompt_style", "ansi_blue");
+    // Set up isocline formatting and completion
+    ic_style_def("prompt_style", "ansi-color=180");
+    ic_set_prompt_marker("[prompt_style]> [/]", "");
     ic_set_default_completer(&CommandHandler::isoclineCompleter, this);
 
     while (true) {
         // Prompt user for input to execute a command
         char* rawInput;
-        rawInput = ic_readline("[prompt-style] ");
+        rawInput = ic_readline("");
         std::string userInput(rawInput);
         free(rawInput);
 
