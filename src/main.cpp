@@ -10,6 +10,7 @@ Settings& settings = Settings::getInstance();
 int main(int, char** argv){
     // Enable ANSI color codes on windows
     enableVirtualTerminal();
+    setUpConsole();
 
     // Initialize settings and command handler
     std::filesystem::path exeDir = std::filesystem::absolute(argv[0]).parent_path();
