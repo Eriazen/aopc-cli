@@ -133,7 +133,10 @@ SETTINGS:
                               [Default: 500]
 
 EXAMPLES:
+    # Set market tax on sold items to 8%
     > setconfig market_tax 0.08
+
+    # Set regoin for checking prices to europe
     > setconfig region europe
 )";
 }
