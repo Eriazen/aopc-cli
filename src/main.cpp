@@ -2,6 +2,7 @@
 #include "aopc-cli/core/commandHandler.hpp"
 #include "aopc-cli/core/settings.hpp"
 #include "aopc-cli/io/formatter.hpp"
+#include "aopc-cli/core/constants.hpp"
 
 
 CommandHandler handler;
@@ -34,8 +35,22 @@ int main(int, char** argv){
     ic_set_history(historyPath.string().c_str(), 200);
 
     // Print welcome message
-    std::cout << "Albion Online Profit Calculator CLI tool started!" << std::endl;
-    std::cout << "Type 'help' for a list of available commands.\n" << std::endl;
+    std::cout    
+        << constants::C_HL1 << "\x1b[4mA\x1b[24m" << constants::C_TEXT << "lbion "
+        << constants::C_HL1 << "\x1b[4mO\x1b[24m" << constants::C_TEXT << "nline "
+        << constants::C_HL1 << "\x1b[4mP\x1b[24m" << constants::C_TEXT << "rofit "
+        << constants::C_HL1 << "\x1b[4mC\x1b[24m" << constants::C_TEXT << "alculator CLI tool started!\n"
+
+        << "Type '" << constants::C_HL1 << "help" << constants::C_TEXT 
+        << "' for a list of available commands.\n\n";
+
+    std::cout << constants::C_HINT << "hint" << constants::C_RESET << '\n';
+    std::cout << constants::C_HL1 << "highlight earth" << constants::C_RESET << '\n';
+    std::cout << constants::C_HL2 << "highlight sky" << constants::C_RESET << '\n';
+    std::cout << constants::C_HL3 << "highlight slate" << constants::C_RESET << '\n';
+    std::cout << constants::C_SUCCESS << "success" << constants::C_RESET << '\n';
+    std::cout << constants::C_ERROR << "error" << constants::C_RESET << '\n';
+    std::cout << constants::C_TEXT << "text" << constants::C_RESET << '\n';
 
     // Start the command handler loop
     handler.run();
