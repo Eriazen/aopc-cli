@@ -35,14 +35,7 @@ int main(int, char** argv){
     ic_set_history(historyPath.string().c_str(), 200);
 
     // Print welcome message
-    std::cout    
-        << constants::C_HL1 << "\x1b[4mA\x1b[24m" << constants::C_TEXT << "lbion "
-        << constants::C_HL1 << "\x1b[4mO\x1b[24m" << constants::C_TEXT << "nline "
-        << constants::C_HL1 << "\x1b[4mP\x1b[24m" << constants::C_TEXT << "rofit "
-        << constants::C_HL1 << "\x1b[4mC\x1b[24m" << constants::C_TEXT << "alculator CLI tool started!\n"
-
-        << "Type '" << constants::C_HL1 << "help" << constants::C_TEXT 
-        << "' for a list of available commands.\n\n";
+    TextFormatter::printIntroMessage();
 
     // Start the command handler loop
     handler.run();

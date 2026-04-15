@@ -15,6 +15,8 @@ namespace TextFormatter {
     std::string formatCurrency(int value, std::string currency);
     std::string formatPercentage(float value, int precision = 1);
 
+    void printIntroMessage();
+
     template <typename Container>
     void printWrappedList(const Container& items, const std::string& indent, int maxWidth) {
         int currentLineLength = static_cast<int>(indent.length());
