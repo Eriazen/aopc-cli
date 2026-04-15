@@ -22,4 +22,12 @@ namespace constants {
 
     // Output formatting
     inline constexpr unsigned int TOTAL_LINE_WIDTH { 100 };
+    inline constexpr std::string_view C_RESET { "\x1b[0m" };
+    inline constexpr std::string_view C_HINT { "\x1b[38;5;243m" };
+    inline constexpr std::string_view C_HL1 { "\x1b[38;5;180m" };
+    inline constexpr std::string_view C_HL2 { "\x1b[38;5;110m" };
+    inline constexpr std::string_view C_HL3 { "\x1b[38;5;103m" };
+    inline constexpr std::string_view C_SUCCESS { "\x1b[38;5;108m" };
+    inline constexpr std::string_view C_ERROR { "\x1b[38;5;131m" };
+    inline constexpr std::string_view C_TEXT { "\x1b[38;5;247m" };
 }

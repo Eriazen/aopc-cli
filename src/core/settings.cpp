@@ -91,8 +91,8 @@ bool Settings::loadSettingsFromFile() {
         return true;
     } catch (const std::exception& e) {
         // Catch parsing errors (corrupted JSON file, etc.)
-        std::cerr << "Error: Couldn't parse file '"<< m_configPath <<"' with exception '" << e.what() << "'." << std::endl;
-        std::cerr << "Writing default value to a settings file.\n" << std::endl;
+        std::cerr << constants::C_ERROR << "Error: Couldn't parse file '"<< m_configPath <<"' with exception '" << e.what() << "'.\n";
+        std::cerr << constants::C_TEXT << "Writing default value to a settings file.\n";
         return false;
     }
 }
@@ -109,7 +109,7 @@ bool Settings::saveSettingsToFile() const {
     // Open settings file, overwriting existing settings
     std::ofstream file(m_configPath, std::ios::trunc);
     if (!file.is_open()) {
-        std::cerr << "Error: Couldn't create settings file at '" << m_configPath << "'." << std::endl;
+        std::cerr << constants::C_ERROR << "Error: Couldn't create settings file at '" << m_configPath << "'.\n" << constants::C_RESET;
         return false;
     }
 

@@ -52,3 +52,9 @@ inline void enableVirtualTerminal() {
     system("color 07");
 #endif
 }
+
+inline void setUpConsole() { 
+#ifdef _WIN32
+    SetConsoleTitleA("Albion Online Price Checker");
+#endif
+}

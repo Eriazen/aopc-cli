@@ -1,4 +1,5 @@
 #include "aopc-cli/io/apiManager.hpp"
+#include "aopc-cli/core/constants.hpp"
 #include <iostream>
 
 
@@ -14,7 +15,7 @@ bool APIManager::performCurlRequest() {
     CURL *curl = curl_easy_init();
 
     if (!curl) {
-        std::cerr << "Error: Failed to initialize CURL" << std::endl;
+        std::cerr << constants::C_ERROR << "Error: Failed to initialize CURL" << constants::C_RESET << '\n';
         return false;
     }
 
@@ -26,7 +27,7 @@ bool APIManager::performCurlRequest() {
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        std::cerr << "Error: curl_easy_perform() failed with " << curl_easy_strerror(res) << std::endl;
+        std::cerr << constants::C_ERROR << "Error: curl_easy_perform() failed with " << curl_easy_strerror(res) << constants::C_RESET << '\n';
         return false;
     }
 
@@ -39,7 +40,7 @@ bool APIManager::parseJsonResponse() {
 
         return true;
     } catch (json::parse_error& e) {
-        std::cerr << "Error: Couldn't parse curl response with exception '" << e.what() << "'." << std::endl;
+        std::cerr << constants::C_ERROR << "Error: Couldn't parse curl response with exception '" << e.what() << "'." << constants::C_RESET << '\n';
         return false;
     }
 }

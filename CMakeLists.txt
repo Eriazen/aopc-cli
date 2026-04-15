@@ -45,6 +45,10 @@ target_sources(aopc-cli PRIVATE
     ${source_dir}/io/formatter.cpp
 )
 
+if(WIN32)
+    target_sources(aopc-cli PRIVATE ${source_dir}/resources.rc)
+endif()
+
 target_include_directories(aopc-cli PRIVATE
     ${include_dir}
 )

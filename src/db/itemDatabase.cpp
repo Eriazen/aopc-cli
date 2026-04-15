@@ -1,4 +1,5 @@
 #include "aopc-cli/db/itemDatabase.hpp"
+#include "aopc-cli/core/constants.hpp"
 #include <iostream>
 
 
@@ -6,7 +7,7 @@
 // If the database cannot be opened, it logs an error message and sets the db pointer to nullptr
 ItemDatabase::ItemDatabase(const std::string& dbPath) {
     if (sqlite3_open(dbPath.c_str(), &m_db) != SQLITE_OK) {
-        std::cerr << "Error opening database: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << constants::C_ERROR << "Error opening database: " << sqlite3_errmsg(m_db) << constants::C_RESET << '\n';
         m_db = nullptr;
     }
 }
