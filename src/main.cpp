@@ -44,14 +44,6 @@ int main(int, char** argv){
         << "Type '" << constants::C_HL1 << "help" << constants::C_TEXT 
         << "' for a list of available commands.\n\n";
 
-    std::cout << constants::C_HINT << "hint" << constants::C_RESET << '\n';
-    std::cout << constants::C_HL1 << "highlight earth" << constants::C_RESET << '\n';
-    std::cout << constants::C_HL2 << "highlight sky" << constants::C_RESET << '\n';
-    std::cout << constants::C_HL3 << "highlight slate" << constants::C_RESET << '\n';
-    std::cout << constants::C_SUCCESS << "success" << constants::C_RESET << '\n';
-    std::cout << constants::C_ERROR << "error" << constants::C_RESET << '\n';
-    std::cout << constants::C_TEXT << "text" << constants::C_RESET << '\n';
-
     // Start the command handler loop
     handler.run();
 
