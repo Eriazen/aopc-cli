@@ -36,6 +36,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(isocline)
 
 find_package(SQLite3 REQUIRED)
+
+if (NOT TARGET SQLite3::SQLite3 AND TARGET SQLite::SQLite3)
+    add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+endif()
+
 find_package(CURL REQUIRED HTTPS)
 
 add_executable(${PROJECT_NAME})
@@ -74,4 +79,9 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMENT "Copying config folder to build directory"
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json SQLite3::SQLite3 CURL::libcurl isocline)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    nlohmann_json::nlohmann_json
+    SQLite3::SQLite3
+    CURL::libcurl
+    isocline
+)
