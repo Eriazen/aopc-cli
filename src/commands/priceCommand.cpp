@@ -274,12 +274,12 @@ void PriceCommand::calculateProfit() {
 void PriceCommand::printPriceReport() {
     std::cout << std::fixed << std::setprecision(1);
 
-    std::cout << std::string(constants::TOTAL_LINE_WIDTH, '=') << '\n';
-    std::cout << "REPORT: " << m_report.craftedItemName << '\n';
-    std::cout << std::string(constants::TOTAL_LINE_WIDTH, '=') << '\n' << '\n';
+    std::cout << constants::C_TEXT << std::string(constants::TOTAL_LINE_WIDTH, '=') << '\n';
+    std::cout << constants::C_HL2 << "REPORT: " << constants::C_RESET << m_report.craftedItemName << '\n';
+    std::cout << constants::C_TEXT << std::string(constants::TOTAL_LINE_WIDTH, '=') << "\n\n";
 
-    std::cout << "[ Global Parameters ]" << '\n';
-        std::cout << "  "
+    std::cout << "[ Global Parameters ]\n";
+        std::cout << constants::C_RESET << "  "
             << std::left << std::setw(12) << "Tax Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedTaxRate * 100, 1)
             << std::setw(12) << "Return Rate" << ": " << std::setw(31) << TextFormatter::formatPercentage(m_report.appliedRrr * 100, 1) << '\n';
         if (!m_report.materialSources.empty()) {
@@ -310,16 +310,16 @@ void PriceCommand::printPriceReport() {
                 if (constants::TOTAL_LINE_WIDTH > (3 + cityHeader.length() + 1)) {
                     remainingWidth = constants::TOTAL_LINE_WIDTH - (3 + static_cast<unsigned int>(cityHeader.length()) + 1);
                 }
-                std::cout << "-- " << cityHeader << " " << std::string(remainingWidth, '-') << '\n' << '\n';
+                std::cout << constants::C_TEXT << "-- " << constants::C_HL2 << cityHeader << constants::C_TEXT << " " << std::string(remainingWidth, '-') << "\n\n";
 
                 // Material Table
-                std::cout << "[ Material Costs ]" << '\n';
-                std::cout << "  "
+                std::cout << "[ Material Costs ]\n";
+                std::cout << constants::C_HL3 << "  "
                     << std::left << std::setw(30) << "Material Name"
                     << std::right << std::setw(10) << "Qty"
                     << std::setw(25) << "Market Price"
-                    << std::setw(25) << "Total Price" << '\n';
-                std::cout << "  " << std::string(90, '-') << '\n';
+                    << std::setw(25) << "Total Price\n";
+                std::cout << constants::C_TEXT << "  " << std::string(90, '-') << constants::C_RESET << '\n';
 
                 for (const auto& ingredient : source.localIngredients) {
                     std::cout << "  "
@@ -328,27 +328,35 @@ void PriceCommand::printPriceReport() {
                         << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice, "s")
                         << std::setw(25) << TextFormatter::formatCurrency(ingredient.marketPrice * ingredient.quantity, "s") << '\n';
                 }
-                std::cout << "  " << std::string(90, '-') << '\n';
-                std::cout << std::right << std::setw(76) << "Total Base Cost (w/ RRR):" << std::setw(16) << TextFormatter::formatCurrency(source.materialCostWithRrr, "s") << '\n' << '\n';
+                std::cout << constants::C_TEXT << "  " << std::string(90, '-') << constants::C_RESET << '\n';
+
+                std::cout << std::right << std::setw(76) << "Total Base Cost (w/ RRR):" << std::setw(16)
+                    << TextFormatter::formatCurrency(source.materialCostWithRrr, "s") << "\n\n";
 
                 // Profit Table
-                std::cout << "[ Projected Profits ]" << '\n';
-                std::cout << "  "
+                std::cout << constants::C_TEXT << "[ Projected Profits ]\n";
+                std::cout << constants::C_HL3 << "  "
                     << std::left << std::setw(20) << "Quality"
                     << std::right << std::setw(20) << "Net Revenue"
                     << std::setw(20) << "Profit" << '\n';
-                std::cout << "  " << std::string(60, '-') << '\n';
+                std::cout << constants::C_TEXT << "  " << std::string(60, '-') << constants::C_RESET << '\n';
 
                 // Loop through calculated routes to find the exact permutations for this Source/Dest combo
                 for (const auto& route : m_report.calculatedRoutes) {
                     if (route.sourceCity == source.cityName && route.destinationCity == destCityName) {
+                        std::string profitColor;
+                        if (route.finalProfit > 0) {
+                            profitColor = constants::C_SUCCESS;
+                        } else {
+                            profitColor = constants::C_ERROR;
+                        }
                         std::cout << "  "
                             << std::left << std::setw(20) << TextFormatter::formatNumber(route.qualityLevel)
                             << std::right << std::setw(20) << TextFormatter::formatCurrency(route.totalRevenue, "s")
-                            << std::setw(20) << TextFormatter::formatCurrency(route.finalProfit, "s") << '\n';
+                            << profitColor << std::setw(20) << TextFormatter::formatCurrency(route.finalProfit, "s") << constants::C_RESET << '\n';
                     }
                 }
-                std::cout << "  " << std::string(60, '-') << '\n' << '\n';
+                std::cout << constants::C_TEXT << "  " << std::string(60, '-') << constants::C_RESET << "\n\n";
             }
         }
     } else {
@@ -361,26 +369,32 @@ void PriceCommand::printPriceReport() {
             if (constants::TOTAL_LINE_WIDTH > (3 + destCityName.length() + 1)) {
                 remainingWidth = constants::TOTAL_LINE_WIDTH - (3 + static_cast<unsigned int>(destCityName.length()) + 1);
             }
-            std::cout << "-- " << destCityName << " " << std::string(remainingWidth, '-') << '\n' << '\n';
+            std::cout << constants::C_TEXT << "-- " << constants::C_HL2 << destCityName << constants::C_TEXT << " " << std::string(remainingWidth, '-') << "\n\n";
 
             // Profit Table
-            std::cout << "[ Projected Profits ]" << '\n';
-            std::cout << "  "
+            std::cout << "[ Projected Profits ]\n";
+            std::cout << constants::C_HL3 << "  "
                 << std::left << std::setw(20) << "Quality"
                 << std::right << std::setw(20) << "           "
                 << std::setw(20) << "Profit" << '\n';
-            std::cout << "  " << std::string(60, '-') << '\n';
+            std::cout << constants::C_TEXT << "  " << std::string(60, '-') << constants::C_RESET << '\n';
 
             // Filter routes for this specific destination
             for (const auto& route : m_report.calculatedRoutes) {
                 if (route.destinationCity == destCityName) {
+                    std::string profitColor;
+                    if (route.finalProfit > 0) {
+                        profitColor = constants::C_SUCCESS;
+                    } else {
+                        profitColor = constants::C_ERROR;
+                    }
                     std::cout << "  "
                         << std::left << std::setw(20) << TextFormatter::formatNumber(route.qualityLevel)
                         << std::right << std::setw(20) << std::string(TextFormatter::formatCurrency(route.totalRevenue, "s").length(), ' ')
-                        << std::setw(20) << TextFormatter::formatCurrency(route.finalProfit, "s") << '\n';
+                        << profitColor << std::setw(20) << TextFormatter::formatCurrency(route.finalProfit, "s") << constants::C_RESET << '\n';
                 }
             }
-            std::cout << "  " << std::string(60, '-') << '\n' << '\n';
+            std::cout << constants::C_TEXT << "  " << std::string(60, '-') << constants::C_RESET << "\n\n";
         }
     }
 
