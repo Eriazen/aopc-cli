@@ -6,6 +6,7 @@
 #include "aopc-cli/commands/invalidCommand.hpp"
 #include "aopc-cli/commands/priceCommand.hpp"
 #include "aopc-cli/commands/configCommand.hpp"
+#include "aopc-cli/commands/clearCommand.hpp"
 
 
 CommandHandler::CommandHandler() {
@@ -13,6 +14,7 @@ CommandHandler::CommandHandler() {
     m_blueprints["exit"] = std::make_unique<ExitCommand>();
     m_blueprints["price"] = std::make_unique<PriceCommand>();
     m_blueprints["setconfig"] = std::make_unique<ConfigCommand>();
+    m_blueprints["clear"] = std::make_unique<ClearCommand>();
 }
 
 void CommandHandler::isoclineCompleter(ic_completion_env_t* cenv, const char* input) {
