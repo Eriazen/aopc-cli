@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "aopc-cli/version.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -55,6 +56,6 @@ inline void enableVirtualTerminal() {
 
 inline void setUpConsole() { 
 #ifdef _WIN32
-    SetConsoleTitleA("Albion Online Price Checker");
+    SetConsoleTitleA(std::string(project::TITLE).c_str());
 #endif
 }

@@ -1,0 +1,11 @@
+#pragma once
+
+#include <string>
+
+
+namespace project {
+    inline constexpr std::string_view NAME = "@PROJECT_NAME@";
+    inline constexpr std::string_view TITLE = "@PROJECT_TITLE@";
+    inline constexpr std::string_view VERSION = "@PROJECT_VERSION@";
+    inline constexpr std::string_view BUILD_DATE = "@PROJECT_BUILD_DATE@";
+}
