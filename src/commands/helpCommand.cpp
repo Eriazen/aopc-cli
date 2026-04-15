@@ -50,10 +50,8 @@ void HelpCommand::execute(const std::vector<std::string>& args) {
     if (it != m_commands.end()) {
         it->second();
     } else {
-        std::cout << "No detailed help available for '" << target << "'." << '\n';
-        std::cout << "Type '"
-            << constants::C_HL1 << "help" << constants::C_RESET
-            << "' for a list of available commands." << '\n';
+        std::cout << constants::C_TEXT << "No detailed help available for '" << constants::C_HL2 << target << constants::C_TEXT << "'.\n" << "Type '"
+            << constants::C_HL1 << "help" << constants::C_TEXT << "' for a list of available commands." << '\n';
     }
 }
 

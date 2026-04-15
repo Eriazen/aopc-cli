@@ -61,7 +61,7 @@ bool PriceCommand::getBuy(ArgParser& parser) {
         for (const auto& city : requestedCities) {
             if (std::find(constants::CITIES.begin(), constants::CITIES.end(), city) == constants::CITIES.end()) {
                 // If an invalid city is found, print an error message and return false
-                std::cout << "Error: Invalid city '" << city << "'. Valid cities are: ";
+                std::cout << constants::C_ERROR << "Error: Invalid city '" << city << "'. " << constants::C_TEXT << "Valid cities are: ";
                 for (const auto& validCity : constants::CITIES) std::cout << validCity << " ";
                 std::cout << std::endl;
                 return false;
@@ -485,7 +485,7 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
     }
 
     if (m_report.craftedItemName.empty()) {
-        std::cout << "Error: No item name provided." << std::endl;
+        std::cout << constants::C_ERROR << "Error: No item name provided." << constants::C_RESET<< '\n';
         return;
     }
 
@@ -498,7 +498,7 @@ void PriceCommand::execute(const std::vector<std::string>& args) {
 
     // If the item ID is empty, it means the item was not found in the database, so print an error message and return
     if (m_report.craftedItemId.empty()) {
-        std::cout << "Error: Item '" << m_report.craftedItemName << "' not found in the database." << std::endl;
+        std::cout << constants::C_ERROR << "Error: Item '" << m_report.craftedItemName << "' not found in the database." << constants::C_RESET<< '\n';
         return;
     }
 

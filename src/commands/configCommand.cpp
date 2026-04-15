@@ -7,44 +7,44 @@
 ConfigCommand::ConfigCommand() {
     m_setters["database_path"] = [](const std::string& val) {
         if (Settings::getInstance().setDatabasePath(val)) {
-            std::cout << "Database path set to '" << val << "'." << '\n';
+            std::cout << constants::C_TEXT << "Database path set to '" << val << "'.\n";
         } else {
-            std::cout << "Error: Invalid database path '" << val << "'." << '\n';
+            std::cout << constants::C_ERROR << "Error: Invalid database path '" << val << "'.\n" << constants::C_RESET;
         }
     };
 
     m_setters["region"] = [](const std::string& val) {
         if (Settings::getInstance().setRegionURL(val)) {
-            std::cout << "Region set to '" << val << "'." << '\n';
+            std::cout << constants::C_TEXT << "Region set to '" << val << "'.\n";
         } else {
-            std::cout << "Invalid region '" << val << "'." << '\n';
+            std::cout << constants::C_ERROR << "Error: Invalid region '" << val << "'.\n" << constants::C_RESET;
         }
     };
     
     m_setters["market_tax"] = [](const std::string& val) {
         float num = std::stof(val);
         if (Settings::getInstance().setMarketTax(num)) {
-            std::cout << "Market tax set to " << val << "." << '\n';
+            std::cout << constants::C_TEXT << "Market tax set to " << val << ".\n";
         } else {
-            std::cout << "Invalid market tax value '" << num << "'." << '\n';
+            std::cout << constants::C_ERROR << "Error: Invalid market tax value '" << num << "'.\n" << constants::C_RESET;
         }
     };
 
     m_setters["resource_return"] = [](const std::string& val) {
         float num = std::stof(val);
         if (Settings::getInstance().setResourceReturnRate(num)) {
-            std::cout << "Resource return rate set to " << val << "." << '\n';
+            std::cout << constants::C_TEXT << "Resource return rate set to " << val << ".\n";
         } else {
-            std::cout << "Invalid resource return rate value '" << num << "'." << '\n';
+            std::cout << constants::C_ERROR << "Error: Invalid resource return rate value '" << num << "'.\n" << constants::C_RESET;
         }
     };
 
     m_setters["station_fee"] = [](const std::string& val) {
         int num = std::stoi(val);
         if (Settings::getInstance().setStationFee(num)) {
-            std::cout << "Station fee set to " << val << "." << '\n';
+            std::cout << constants::C_TEXT << "Station fee set to " << val << ".\n";
         } else {
-            std::cout << "Invalid station fee value '" << num << "'." << '\n';
+            std::cout << constants::C_ERROR << "Error: Invalid station fee value '" << num << "'.\n" << constants::C_RESET;
         }
     };
 }
@@ -78,8 +78,7 @@ void ConfigCommand::execute(const std::vector<std::string>& args) {
     ArgParser parser(args);
 
     if (!parser.checkExactArgs(2)) {
-        std::cout << "Error: Invalid config syntax." << '\n';
-        std::cout << "Usage: config set <setting_name> <value>" << '\n';
+        std::cout << constants::C_TEXT << "Usage: " << constants::C_HL1 << "setconfig " << constants::C_HL3 << "<setting_name> <value>\n"  << constants::C_RESET;
         return;
     }
 
@@ -93,12 +92,14 @@ void ConfigCommand::execute(const std::vector<std::string>& args) {
 
             Settings::getInstance().saveSettingsToFile();
         } catch (const std::invalid_argument&) {
-            std::cout << "Error: Invalid value format for '" << settingName << "'. Expected a number." << '\n'; 
+            std::cout << constants::C_ERROR << "Error: Invalid value format for '"
+                << settingName << "'. Expected a number.\n" << constants::C_RESET;
         } catch (const std::out_of_range&) {
-            std::cout << "Error: The number provided is too large or too small." << '\n';
+            std::cout << constants::C_ERROR << "Error: The number provided is too large or too small.\n" << constants::C_RESET;
         }
     } else {
-        std::cout << "Error: Unknown setting '" << settingName << "'." << '\n';
-        std::cout << "Type 'help config' for a list of valid settings." << '\n';
+        std::cout << constants::C_ERROR << "Error: Unknown setting '" << settingName << "'.\n";
+        std::cout << constants::C_TEXT << "Type '" << constants::C_HL1 << "help " << constants::C_HL3
+            << "config" << constants::C_TEXT <<"' for a list of valid settings.\n";
     }
 }

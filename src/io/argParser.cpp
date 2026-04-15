@@ -1,4 +1,5 @@
 #include "aopc-cli/io/argParser.hpp"
+#include "aopc-cli/core/constants.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -40,7 +41,7 @@ std::vector<std::string> ArgParser::getPreFlagValues() {
 bool ArgParser::checkMinArgs(size_t minCount, bool printErr) {
     if (m_args.size() < minCount) {
         if (printErr) {
-            std::cout << "Error: Expected at least " << minCount << " arguments, but got " << m_args.size() << "." << std::endl;
+            std::cout << constants::C_ERROR << "Error: Expected at least " << minCount << " arguments, but got " << m_args.size() << "." << std::endl;
         }
         return false;
     }
@@ -52,7 +53,7 @@ bool ArgParser::checkMinArgs(size_t minCount, bool printErr) {
 bool ArgParser::checkExactArgs(size_t expectedCount, bool printErr) {
     if (m_args.size() != expectedCount) {
         if (printErr) {
-            std::cout << "Error: Expected exactly " << expectedCount << " arguments, but got " << m_args.size() << "." << std::endl;
+            std::cout << constants::C_ERROR << "Error: Expected exactly " << expectedCount << " arguments, but got " << m_args.size() << "." << std::endl;
         }
         return false;
     }
