@@ -68,6 +68,7 @@ void HelpCommand::printGeneralHelp() const {
         << constants::C_HL1     << "    price       " << constants::C_TEXT << "Check the market price and calculate profit for crafting an item.\n"
         << constants::C_HL1     << "    setconfig   " << constants::C_TEXT << "Manage application settings and preferences.\n"
         << constants::C_HL1     << "    help        " << constants::C_TEXT << "Show this help message.\n"
+        << constants::C_HL1     << "    clear       " << constants::C_TEXT << "Clear the console output.\n"
         << constants::C_HL1     << "    exit        " << constants::C_TEXT << "Close the application.\n\n"
         
         << constants::C_TEXT << "Type '" << constants::C_HL1 << "help " << constants::C_HL3 << "<command>" << constants::C_TEXT << "' for detailed information.\n"
